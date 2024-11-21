@@ -24,6 +24,7 @@
                 type="text"
                 :aria-controls="optionsId"
                 :id="id"
+                :placeholder="placeholder"
             />
         </div>
 
@@ -90,15 +91,28 @@ export default {
             type: String,
             default: 'Select an option',
         },
-        // options: {
-        //     type: [Array, Object],
-        //     default: () => {},
-        //     validator: (value) => {
-        //         return value.every((item) =>
-        //             validateObjectKeys(['text', 'value'], item)
-        //         )
-        //     }
-        // },
+        multiple: {
+            type: Boolean,
+            default: false,
+        },
+        options: {
+            type: [Array, Object],
+            default: () => {},
+            validator: (value) => {
+                return true
+                // return value.every((item) =>
+                //     validateObjectKeys(['text', 'value'], item)
+                // )
+            }
+        },
+        placeholder: {
+            type: String,
+            default: 'Select an option.',
+        },
+        value: { // For v-model - note that this changes in Vue 3.
+            type: [String, Number, Array],
+            default: null,
+        },
     },
 
     data() {
@@ -109,13 +123,7 @@ export default {
             initialMaxHeight: '0px', // Ensures no "auto" height initially
             cleanupAutoUpdate: null,
             search: '',
-
-            // Super fake options
-            options: Array.from({ length: 100 }, (_, i) => ({
-                value: i + 1,
-                text: `Option ${i + 1}`,
-                disabled: Math.random() > 0.8, // Randomly set disabled to true for ~20% of options
-            })),
+            selectedValues: [], // Stores currently selected values
         };
     },
 
@@ -125,11 +133,11 @@ export default {
 
             const searchTerm = this.search.toLowerCase();
 
-            return this.options.filter((option) => option.text.toLowerCase().includes(searchTerm))
+            return this.options.filter((option) => option.text.toLowerCase().includes(searchTerm));
         },
 
         optionsId() {
-            return `${this.id}_options`
+            return `${this.id}_options`;
         },
 
         viewportMaxHeight() {
@@ -140,7 +148,26 @@ export default {
         },
     },
 
+    watch: {
+        value: {
+            immediate: true,
+            handler(newValue) {
+                this.setInitialSelected(newValue);
+            },
+        },
+    },
+
     methods: {
+        setInitialSelected(newValue) {
+            // Normalize value (handle single and multiple selection cases)
+            const values = Array.isArray(newValue) ? newValue : [newValue];
+
+            // Filter out invalid or disabled values
+            this.selectedValues = this.options
+                .filter((option) => values.includes(option.value) && !option.disabled)
+                .map((option) => option.value);
+        },
+
         initAutoPositioning() {
             const inputContainer = this.$refs.inputContainer;
             const optionsContainer = this.$refs.optionsContainer;
@@ -167,7 +194,7 @@ export default {
                                     maxHeight: `${maxHeight}px`,
                                     maxWidth: '100%',
                                     overflowY: 'auto',
-                                    width: '100%'
+                                    width: '100%',
                                 });
                             },
                         }),
@@ -192,9 +219,7 @@ export default {
         openOptions() {
             if (this.isOpen) return;
 
-            console.log('Opening options')
-            this.isOpen = true
-
+            this.isOpen = true;
             this.initialMaxHeight = `${this.viewportMaxHeight}px`; // Set immediately
             this.initAutoPositioning();
         },
@@ -202,22 +227,25 @@ export default {
         closeOptions() {
             if (!this.isOpen) return;
 
-            console.log('Closing options')
-            this.isOpen = false
-
+            this.isOpen = false;
             this.cleanupPositioning();
             this.initialMaxHeight = '0px'; // Reset to avoid issues
         },
 
-        // TODO
         isOptionSelected(value) {
-            return false;
+            return this.selectedValues.includes(value);
         },
 
-        //todo
         setSelected(option) {
             if (option.disabled) return;
-            console.log('Selected: ', option.value)
+
+            const newValue = option.value;
+
+            // Update selection for single or multiple values
+            this.selectedValues = [newValue];
+            this.$emit('input', newValue); // Emit for v-model
+
+            if (!this.multiple) this.closeOptions()
         },
     },
 
