@@ -187,23 +187,25 @@ export default {
             this.$emit('input', this.multiple ? this.selectedValues : newValue); // Emit updated values
         },
 
-        openOptions(focus = false) {
+        async openOptions(focus = false) {
             if (this.isOpen) return;
             this.isOpen = true;
 
             this.initialMaxHeight = `${this.viewportMaxHeight}px`;
             this.initAutoPositioning();
 
+            // Focus on the first available option when opening via keyboard controls.
             if (focus) {
-                setTimeout(() => { // Add a delay to ensure the DOM is fully updated
-                    const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
-                    const firstEnabledIndex = this.filteredOptions.findIndex((option) => !option.disabled);
+                // We need to wait for options to exist in the DOM before focusing, nextTick doesn't work for this so we use requestAnimationFrame.
+                await new Promise((resolve) => requestAnimationFrame(resolve));
 
-                    if (firstEnabledIndex !== -1) {
-                        const firstEnabledElement = options[firstEnabledIndex];
-                        firstEnabledElement?.focus(); // Focus the first enabled option
+                const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
+                for (const option of options) {
+                    if (option.getAttribute('aria-disabled') !== 'true') {
+                        option.focus(); // Focus the first enabled option
+                        break;
                     }
-                }, 50); // 50ms delay
+                }
             }
 
             document.addEventListener('keydown', this.handleKeyDown); // Add keyboard listener
@@ -284,16 +286,16 @@ export default {
             if (event.key === 'ArrowDown') {
                 event.preventDefault(); // Prevent page scrolling
 
-                // Start at the first option if nothing is focused
+                // Focus the next enabled option
                 const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % enabledOptions.length;
-                enabledOptions[nextIndex]?.focus(); // Focus on the next enabled option
+                enabledOptions[nextIndex]?.focus();
             } else if (event.key === 'ArrowUp') {
                 event.preventDefault(); // Prevent page scrolling
 
-                // Start at the last option if nothing is focused
+                // Focus the previous enabled option
                 const prevIndex = focusedIndex === -1 ? enabledOptions.length - 1 : (focusedIndex - 1 + enabledOptions.length) % enabledOptions.length;
-                enabledOptions[prevIndex]?.focus(); // Focus on the previous enabled option
-            } else if (event.key === 'Enter') {
+                enabledOptions[prevIndex]?.focus();
+            } else if (event.key === 'Enter' || event.key === ' ') { // Space key added
                 event.preventDefault();
 
                 // Select the currently focused option
@@ -302,7 +304,7 @@ export default {
                     this.setSelected(option);
                 }
             }
-        },
+        }
     },
 
     beforeDestroy() {
