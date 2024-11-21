@@ -175,6 +175,10 @@ export default {
     },
 
     methods: {
+        /**
+         * todo
+         * @param newValue
+         */
         setInitialSelected(newValue) {
             const values = Array.isArray(newValue) ? newValue : [newValue];
             this.selectedValues = this.options
@@ -182,10 +186,19 @@ export default {
                 .map((option) => option.value);
         },
 
+        /**
+         * Todo
+         * @param value
+         * @returns {boolean}
+         */
         isOptionSelected(value) {
             return this.selectedValues.includes(value);
         },
 
+        /**
+         * Todo
+         * @param option
+         */
         setSelected(option) {
             if (option.disabled) return;
 
@@ -201,12 +214,17 @@ export default {
             } else {
                 // Single selection mode
                 this.selectedValues = [newValue];
-                this.closeOptions();
+                this.closeOptions(true);
             }
 
             this.$emit('input', this.multiple ? this.selectedValues : newValue); // Emit updated values
         },
 
+        /**
+         * Todo
+         * @param focus
+         * @returns {Promise<void>}
+         */
         async openOptions(focus = false) {
             if (this.isOpen) return;
             this.isOpen = true;
@@ -232,11 +250,14 @@ export default {
             document.addEventListener('mousedown', this.handleClickOutside); // Listen for outside clicks
         },
 
+        /**
+         * TODO
+         */
         closeOptions(focus = false) {
             if (!this.isOpen) return;
             this.isOpen = false;
 
-            if (focus) this.$refs.inputContainer.querySelector('input').focus();
+            if (focus) this.focusInput()
 
             this.cleanupPositioning();
             this.search = ''; // Clear search on close
@@ -245,6 +266,10 @@ export default {
             document.removeEventListener('mousedown', this.handleClickOutside); // Remove listener
         },
 
+        /**
+         * TODO
+         * @param event
+         */
         handleClickOutside(event) {
             const container = this.$el;
             if (!container.contains(event.target)) {
@@ -252,6 +277,9 @@ export default {
             }
         },
 
+        /**
+         * TODO
+         */
         initAutoPositioning() {
             const inputContainer = this.$refs.inputContainer;
             const optionsContainer = this.$refs.optionsContainer;
@@ -289,6 +317,9 @@ export default {
             });
         },
 
+        /**
+         * TODO
+         */
         cleanupPositioning() {
             if (this.cleanupAutoUpdate) {
                 this.cleanupAutoUpdate();
@@ -296,6 +327,10 @@ export default {
             }
         },
 
+        /**
+         * TODO
+         * @param event
+         */
         handleKeyDown(event) {
             if (!this.isOpen) return
 
@@ -335,14 +370,24 @@ export default {
                     const option = this.filteredOptions[options.indexOf(document.activeElement)];
                     this.setSelected(option);
                 }
-                return
             }
         },
 
+        /**
+         * TODO
+         */
         clearSelection() {
             this.selectedValues = [];
             this.$emit('input', this.multiple ? [] : null);
-            this.closeOptions(true)
+
+            this.focusInput()
+        },
+
+        /**
+         * TODO
+         */
+        focusInput() {
+            this.$refs.inputContainer.querySelector('input').focus();
         }
     },
 
