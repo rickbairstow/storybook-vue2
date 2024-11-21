@@ -19,8 +19,18 @@
                 :placeholder="search ? '' : displayedPlaceholder"
                 @keydown.enter="openOptions(true)"
                 @keydown.down="openOptions(true)"
-                @click="openOptions"
+                @click="openOptions()"
             />
+
+            <button
+                v-if="clearable && this.selectedValues.length"
+                aria-label="Clear selection"
+                class="select-input-clear"
+                type="button"
+                @click="clearSelection"
+            >
+                X
+            </button>
         </div>
 
         <!-- Options dropdown -->
@@ -76,6 +86,10 @@ import { computePosition, autoUpdate, offset, flip, shift, size } from '@floatin
 
 export default {
     props: {
+        clearable: {
+            default: true,
+            type: Boolean
+        },
         id: {
             required: true,
             type: String,
@@ -323,6 +337,12 @@ export default {
                 }
                 return
             }
+        },
+
+        clearSelection() {
+            this.selectedValues = [];
+            this.$emit('input', this.multiple ? [] : null);
+            this.closeOptions(true)
         }
     },
 
@@ -333,7 +353,7 @@ export default {
 };
 </script>
 
-<!-- maybe not scoped? -->
+<!-- todo might not need to be scoped -->
 <style scoped>
 .select-container {
     font-size: 16px; /* reset to base font sizes. */
@@ -347,8 +367,7 @@ export default {
     box-sizing: border-box;
     display: flex;
     height: 40px;
-    min-width: 120px; /* todo */
-    overflow: hidden; /* todo not sure this is needed */
+    overflow: hidden;
     width: 100%;
 }
 
@@ -357,28 +376,49 @@ export default {
 }
 
 .select-input-input {
-    all: unset; /* Resets all inherited and applied styles */
-    box-sizing: border-box; /* Ensures padding and borders are included in width/height */
-    display: block; /* Makes input behave like a block element */
+    all: unset;
 
+    box-sizing: border-box;
+    display: block;
     height: 100%;
     min-width: 0;
     padding: 0 .5rem;
     width: 100%;
 }
 
+.select-input-clear {
+    all: unset;
+
+    align-items: center;
+    background: transparent;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    width: 44px;
+}
+.select-input-clear:hover {
+    background: #eee;
+}
+
 .select-options-container {
     background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     color: #000;
     position: absolute;
     transition: all 0.2s ease;
     z-index: 10;
 }
+
 .select-options-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
+
 .select-options-item {
     background-color: #ccc;
     padding: 0.5rem 1rem;
@@ -386,9 +426,11 @@ export default {
     display: flex;
     justify-content: space-between;
 }
+
 .select-options-item:hover {
     background-color: #999;
 }
+
 .select-options-item[aria-disabled="true"] {
     background-color: #999;
     color: #666;
