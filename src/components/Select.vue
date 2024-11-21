@@ -124,11 +124,10 @@ export default {
 
     data() {
         return {
-            isOpen: false,
-            position: { x: 0, y: 0 },
+            cleanupAutoUpdate: null,
             floatingStyles: {}, // Stores computed styles
             initialMaxHeight: '0px', // Ensures no "auto" height initially
-            cleanupAutoUpdate: null,
+            isOpen: false,
             search: '', // Tracks the user's search input
             selectedValues: [], // Stores currently selected values
         };
