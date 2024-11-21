@@ -199,6 +199,7 @@ export default {
             this.isOpen = true;
             this.initialMaxHeight = `${this.viewportMaxHeight}px`;
             this.initAutoPositioning();
+            document.addEventListener('mousedown', this.handleClickOutside); // Listen for outside clicks
         },
 
         closeOptions() {
@@ -207,6 +208,14 @@ export default {
             this.cleanupPositioning();
             this.search = ''; // Clear search on close
             this.initialMaxHeight = '0px';
+            document.removeEventListener('mousedown', this.handleClickOutside); // Remove listener
+        },
+
+        handleClickOutside(event) {
+            const container = this.$el;
+            if (!container.contains(event.target)) {
+                this.closeOptions(); // Close if the click is outside
+            }
         },
 
         initAutoPositioning() {
@@ -256,6 +265,7 @@ export default {
 
     beforeDestroy() {
         this.cleanupPositioning();
+        document.removeEventListener('mousedown', this.handleClickOutside); // Cleanup listener
     },
 };
 </script>
