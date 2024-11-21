@@ -142,18 +142,14 @@ export default {
         },
 
         displayedPlaceholder() {
-            if (this.multiple && this.selectedValues.length > 0) {
-                // Join selected options for multiple mode
-                return this.selectedValues
-                    .map((val) => this.options.find((o) => o.value === val)?.text || '')
-                    .join(', ');
+            if (this.multiple && this.selectedValues?.length) {
+                if (this.selectedValues.length === this.options.length) return 'All options selected'
+                if (this.selectedValues.length > 1) return `${this.selectedValues.length} options selected`
+                return this.options.find((o) => o.value === this.selectedValues[0])?.text
             }
-            if (!this.multiple && this.selectedValues.length === 1) {
-                // Single selection mode
-                return this.options.find((o) => o.value === this.selectedValues[0])?.text || this.placeholder;
-            }
-            return this.placeholder;
-        },
+            if (this.selectedValues.length) return this.options.find((o) => o.value === this.selectedValues[0])?.text
+            return this.placeholder
+        }
     },
 
     watch: {
@@ -280,7 +276,6 @@ export default {
     min-width: 120px; /* todo */
     overflow: hidden; /* todo not sure this is needed */
     width: 100%;
-
 }
 
 .select-input-container:focus-within {
