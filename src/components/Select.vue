@@ -18,14 +18,13 @@
         >
             <input
                 v-model="search"
-                readonly
                 aria-label="Select an option"
                 autocomplete="off"
                 class="select-input-input"
                 type="text"
                 :aria-controls="optionsId"
                 :id="id"
-                :placeholder="displayedPlaceholder"
+                :placeholder="search ? '' : displayedPlaceholder"
                 @focus="openOptions"
             />
         </div>
@@ -117,14 +116,14 @@ export default {
             floatingStyles: {}, // Stores computed styles
             initialMaxHeight: '0px', // Ensures no "auto" height initially
             cleanupAutoUpdate: null,
-            search: '',
+            search: '', // Tracks the user's search input
             selectedValues: [], // Stores currently selected values
         };
     },
 
     computed: {
         filteredOptions() {
-            if (!this.search) return this.options;
+            if (!this.search) return this.options; // If no search term, return all options.
 
             const searchTerm = this.search.toLowerCase();
 
@@ -210,6 +209,7 @@ export default {
             if (!this.isOpen) return;
             this.isOpen = false;
             this.cleanupPositioning();
+            this.search = ''; // Clear search on close
             this.initialMaxHeight = '0px';
         },
 
