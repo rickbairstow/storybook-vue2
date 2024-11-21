@@ -1,6 +1,6 @@
 import Select from './Select.vue';
 
-const options = Array.from({ length: 10 }, (_, i) => ({
+const options = Array.from({ length: 50 }, (_, i) => ({
     value: i + 1,
     text: `Option ${i + 1}`,
     disabled: Math.random() > 0.8, // Randomly disable options
