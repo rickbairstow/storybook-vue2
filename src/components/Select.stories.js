@@ -6,7 +6,8 @@ export default {
     component: Select,
     argTypes: {},
     args: {
-        test: 'test' // Default value for the 'test' prop
+        disabled: false,
+        id: 'test'
     }
 }
 
