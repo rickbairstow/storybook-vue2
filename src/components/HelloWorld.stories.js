@@ -1,16 +1,20 @@
 import HelloWorld from './HelloWorld.vue'
 
 export default {
-    components: {HelloWorld},
+    components: { HelloWorld },
     title: 'HelloWorld',
     component: HelloWorld,
     argTypes: {}
 }
 
-const Template = (args, { argTypes }) => ({
-    props: Object.keys(argTypes),
+const Template = (args) => ({
     components: { HelloWorld },
-    template: `<HelloWorld />`,
+    data() {
+        return {
+            args
+        }
+    },
+    template: `<HelloWorld v-bind="args"/>`
 });
 
 export const Test = Template.bind({});
