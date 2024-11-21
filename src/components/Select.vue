@@ -277,11 +277,17 @@ export default {
         },
 
         handleKeyDown(event) {
-            if (!this.isOpen) return;
+            if (!this.isOpen) return
 
-            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
-            const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true');
-            const focusedIndex = enabledOptions.indexOf(document.activeElement);
+            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
+            const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true')
+            const focusedIndex = enabledOptions.indexOf(document.activeElement)
+
+            // This prevents native tab behaviour within the open options, as e use arrow keys instead.
+            if (event.key === 'tab') {
+                this.closeOptions()
+                return
+            }
 
             if (event.key === 'ArrowDown') {
                 event.preventDefault(); // Prevent page scrolling
@@ -289,13 +295,19 @@ export default {
                 // Focus the next enabled option
                 const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % enabledOptions.length;
                 enabledOptions[nextIndex]?.focus();
-            } else if (event.key === 'ArrowUp') {
+                return
+            }
+
+            if (event.key === 'ArrowUp') {
                 event.preventDefault(); // Prevent page scrolling
 
                 // Focus the previous enabled option
                 const prevIndex = focusedIndex === -1 ? enabledOptions.length - 1 : (focusedIndex - 1 + enabledOptions.length) % enabledOptions.length;
                 enabledOptions[prevIndex]?.focus();
-            } else if (event.key === 'Enter' || event.key === ' ') { // Space key added
+                return
+            }
+
+            if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
 
                 // Select the currently focused option
@@ -303,6 +315,7 @@ export default {
                     const option = this.filteredOptions[options.indexOf(document.activeElement)];
                     this.setSelected(option);
                 }
+                return
             }
         }
     },
