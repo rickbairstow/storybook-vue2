@@ -3,14 +3,6 @@
         class="select-container"
         @keydown.esc="closeOptions"
     >
-        <!-- Temp button to trigger open -->
-        <button
-            type="button"
-            @click="isOpen ? closeOptions() : openOptions()"
-        >
-            Open
-        </button>
-
         <!-- Search area -->
         <div
             class="select-input-container"
