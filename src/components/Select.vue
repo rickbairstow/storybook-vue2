@@ -38,11 +38,10 @@
                 aria-label="Options list"
             >
                 <li
-                    v-for="(option) in filteredOptions"
+                    v-for="(option, index) in filteredOptions"
                     class="select-options-item"
-                    :class="{ 'disabled': option.disabled }"
                     role="option"
-                    tabindex="-1"
+                    tabindex="0"
                     :aria-disabled="option.disabled"
                     :aria-label="option.text"
                     :aria-selected="isOptionSelected(option.value)"
@@ -191,6 +190,7 @@ export default {
             this.isOpen = true;
             this.initialMaxHeight = `${this.viewportMaxHeight}px`;
             this.initAutoPositioning();
+            document.addEventListener('keydown', this.handleKeyDown); // Add keyboard listener
             document.addEventListener('mousedown', this.handleClickOutside); // Listen for outside clicks
         },
 
@@ -200,6 +200,7 @@ export default {
             this.cleanupPositioning();
             this.search = ''; // Clear search on close
             this.initialMaxHeight = '0px';
+            document.removeEventListener('keydown', this.handleKeyDown); // Remove keyboard listener
             document.removeEventListener('mousedown', this.handleClickOutside); // Remove listener
         },
 
@@ -251,6 +252,36 @@ export default {
             if (this.cleanupAutoUpdate) {
                 this.cleanupAutoUpdate();
                 this.cleanupAutoUpdate = null;
+            }
+        },
+
+        handleKeyDown(event) {
+            if (!this.isOpen) return;
+
+            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
+            const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true');
+            const focusedIndex = enabledOptions.indexOf(document.activeElement);
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault(); // Prevent page scrolling
+
+                // Start at the first option if nothing is focused
+                const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % enabledOptions.length;
+                enabledOptions[nextIndex]?.focus(); // Focus on the next enabled option
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault(); // Prevent page scrolling
+
+                // Start at the last option if nothing is focused
+                const prevIndex = focusedIndex === -1 ? enabledOptions.length - 1 : (focusedIndex - 1 + enabledOptions.length) % enabledOptions.length;
+                enabledOptions[prevIndex]?.focus(); // Focus on the previous enabled option
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+
+                // Select the currently focused option
+                if (document.activeElement && enabledOptions.includes(document.activeElement)) {
+                    const option = this.filteredOptions[options.indexOf(document.activeElement)];
+                    this.setSelected(option);
+                }
             }
         },
     },
@@ -317,10 +348,11 @@ export default {
 .select-options-item:hover {
     background-color: #999;
 }
-.select-options-item.disabled {
+.select-options-item[aria-disabled="true"] {
     background-color: #999;
-    cursor: not-allowed;
+    color: #666;
     pointer-events: none;
+    cursor: not-allowed;
 }
 
 @media (min-width: 640px) {}
