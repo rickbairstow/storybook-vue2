@@ -3,7 +3,7 @@
         class="select-container"
         @keydown.esc="closeOptions"
     >
-        <!-- temp button to trigger open -->
+        <!-- Temp button to trigger open -->
         <button
             type="button"
             @click="isOpen ? closeOptions() : openOptions()"
@@ -18,13 +18,15 @@
         >
             <input
                 v-model="search"
+                readonly
                 aria-label="Select an option"
                 autocomplete="off"
                 class="select-input-input"
                 type="text"
                 :aria-controls="optionsId"
                 :id="id"
-                :placeholder="placeholder"
+                :placeholder="displayedPlaceholder"
+                @focus="openOptions"
             />
         </div>
 
@@ -55,9 +57,8 @@
                     :aria-selected="isOptionSelected(option.value)"
                     :key="option.value"
                     @click="setSelected(option)"
-                    @keydown.enter="setSelected(option)"
                 >
-                    {{  option.text }}
+                    {{ option.text }}
 
                     <div
                         v-if="isOptionSelected(option.value)"
@@ -96,20 +97,14 @@ export default {
             default: false,
         },
         options: {
-            type: [Array, Object],
-            default: () => {},
-            validator: (value) => {
-                return true
-                // return value.every((item) =>
-                //     validateObjectKeys(['text', 'value'], item)
-                // )
-            }
+            type: Array,
+            default: () => [],
         },
         placeholder: {
             type: String,
             default: 'Select an option.',
         },
-        value: { // For v-model - note that this changes in Vue 3.
+        value: {
             type: [String, Number, Array],
             default: null,
         },
@@ -146,6 +141,20 @@ export default {
                 ? window.innerHeight // Mobile: Use viewport height
                 : 200; // Default: 200px maxHeight
         },
+
+        displayedPlaceholder() {
+            if (this.multiple && this.selectedValues.length > 0) {
+                // Join selected options for multiple mode
+                return this.selectedValues
+                    .map((val) => this.options.find((o) => o.value === val)?.text || '')
+                    .join(', ');
+            }
+            if (!this.multiple && this.selectedValues.length === 1) {
+                // Single selection mode
+                return this.options.find((o) => o.value === this.selectedValues[0])?.text || this.placeholder;
+            }
+            return this.placeholder;
+        },
     },
 
     watch: {
@@ -159,13 +168,49 @@ export default {
 
     methods: {
         setInitialSelected(newValue) {
-            // Normalize value (handle single and multiple selection cases)
             const values = Array.isArray(newValue) ? newValue : [newValue];
-
-            // Filter out invalid or disabled values
             this.selectedValues = this.options
                 .filter((option) => values.includes(option.value) && !option.disabled)
                 .map((option) => option.value);
+        },
+
+        isOptionSelected(value) {
+            return this.selectedValues.includes(value);
+        },
+
+        setSelected(option) {
+            if (option.disabled) return;
+
+            const newValue = option.value;
+
+            if (this.multiple) {
+                // Toggle selection for multiple mode
+                if (this.selectedValues.includes(newValue)) {
+                    this.selectedValues = this.selectedValues.filter((val) => val !== newValue);
+                } else {
+                    this.selectedValues = [...this.selectedValues, newValue];
+                }
+            } else {
+                // Single selection mode
+                this.selectedValues = [newValue];
+                this.closeOptions();
+            }
+
+            this.$emit('input', this.multiple ? this.selectedValues : newValue); // Emit updated values
+        },
+
+        openOptions() {
+            if (this.isOpen) return;
+            this.isOpen = true;
+            this.initialMaxHeight = `${this.viewportMaxHeight}px`;
+            this.initAutoPositioning();
+        },
+
+        closeOptions() {
+            if (!this.isOpen) return;
+            this.isOpen = false;
+            this.cleanupPositioning();
+            this.initialMaxHeight = '0px';
         },
 
         initAutoPositioning() {
@@ -181,18 +226,14 @@ export default {
                 computePosition(inputContainer, optionsContainer, {
                     placement: 'bottom-start',
                     middleware: [
-                        offset(1), // gap between input and options list
+                        offset(1),
                         flip(),
                         shift(),
                         size({
                             apply: ({ availableHeight, elements }) => {
-                                const maxHeight = Math.min(
-                                    availableHeight,
-                                    this.viewportMaxHeight
-                                );
+                                const maxHeight = Math.min(availableHeight, this.viewportMaxHeight);
                                 Object.assign(elements.floating.style, {
                                     maxHeight: `${maxHeight}px`,
-                                    maxWidth: '100%',
                                     overflowY: 'auto',
                                     width: '100%',
                                 });
@@ -211,41 +252,9 @@ export default {
 
         cleanupPositioning() {
             if (this.cleanupAutoUpdate) {
-                this.cleanupAutoUpdate(); // Stops autoUpdate
+                this.cleanupAutoUpdate();
                 this.cleanupAutoUpdate = null;
             }
-        },
-
-        openOptions() {
-            if (this.isOpen) return;
-
-            this.isOpen = true;
-            this.initialMaxHeight = `${this.viewportMaxHeight}px`; // Set immediately
-            this.initAutoPositioning();
-        },
-
-        closeOptions() {
-            if (!this.isOpen) return;
-
-            this.isOpen = false;
-            this.cleanupPositioning();
-            this.initialMaxHeight = '0px'; // Reset to avoid issues
-        },
-
-        isOptionSelected(value) {
-            return this.selectedValues.includes(value);
-        },
-
-        setSelected(option) {
-            if (option.disabled) return;
-
-            const newValue = option.value;
-
-            // Update selection for single or multiple values
-            this.selectedValues = [newValue];
-            this.$emit('input', newValue); // Emit for v-model
-
-            if (!this.multiple) this.closeOptions()
         },
     },
 
