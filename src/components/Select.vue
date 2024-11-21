@@ -1,7 +1,7 @@
 <template>
     <div
         class="select-container"
-        @keydown.esc="closeOptions"
+        @keydown.esc="closeOptions(true)"
     >
         <!-- Search area -->
         <div
@@ -17,25 +17,27 @@
                 :aria-controls="optionsId"
                 :id="id"
                 :placeholder="search ? '' : displayedPlaceholder"
-                @focus="openOptions"
+                @keydown.enter="openOptions(true)"
+                @keydown.down="openOptions(true)"
+                @click="openOptions"
             />
         </div>
 
         <!-- Options dropdown -->
         <div
             v-show="isOpen"
-            class="select-options-container"
             ref="optionsContainer"
+            class="select-options-container"
             :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
         >
             <ul
                 v-if="filteredOptions.length > 0"
+                aria-description="Use the arrow keys to navigate options, press enter to select an option"
+                aria-label="Options list"
                 class="select-options-list"
                 role="listbox"
                 tabindex="0"
                 :id="optionsId"
-                aria-description="Use the arrow keys to navigate options, press enter to select the highlighted option"
-                aria-label="Options list"
             >
                 <li
                     v-for="(option, index) in filteredOptions"
@@ -185,18 +187,35 @@ export default {
             this.$emit('input', this.multiple ? this.selectedValues : newValue); // Emit updated values
         },
 
-        openOptions() {
+        openOptions(focus = false) {
             if (this.isOpen) return;
             this.isOpen = true;
+
             this.initialMaxHeight = `${this.viewportMaxHeight}px`;
             this.initAutoPositioning();
+
+            if (focus) {
+                setTimeout(() => { // Add a delay to ensure the DOM is fully updated
+                    const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
+                    const firstEnabledIndex = this.filteredOptions.findIndex((option) => !option.disabled);
+
+                    if (firstEnabledIndex !== -1) {
+                        const firstEnabledElement = options[firstEnabledIndex];
+                        firstEnabledElement?.focus(); // Focus the first enabled option
+                    }
+                }, 50); // 50ms delay
+            }
+
             document.addEventListener('keydown', this.handleKeyDown); // Add keyboard listener
             document.addEventListener('mousedown', this.handleClickOutside); // Listen for outside clicks
         },
 
-        closeOptions() {
+        closeOptions(focus = false) {
             if (!this.isOpen) return;
             this.isOpen = false;
+
+            if (focus) this.$refs.inputContainer.querySelector('input').focus();
+
             this.cleanupPositioning();
             this.search = ''; // Clear search on close
             this.initialMaxHeight = '0px';
