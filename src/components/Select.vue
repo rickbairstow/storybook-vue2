@@ -47,6 +47,8 @@
             v-show="isOpen && !disabled"
             ref="optionsContainer"
             class="select-options-container"
+            role="listbox"
+            :id="optionsId"
             :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
         >
             <template v-if="filteredOptions.length > 0">
@@ -55,6 +57,8 @@
                         v-if="item.group"
                         :key="`select_group_${index}`"
                         class="select-options-group-header"
+                        role="presentation"
+                        :aria-label="`Group: ${item.group}`"
                     >
                         {{ item.group }}
                     </div>
@@ -64,6 +68,8 @@
                         v-if="item.group"
                         class="select-options-list"
                         :key="`group-options-${item.group}`"
+                        role="group"
+                        :aria-labelledby="`select_group_${index}`"
                     >
                         <li
                             v-for="option in item.options"
