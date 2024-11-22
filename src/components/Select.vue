@@ -5,8 +5,9 @@
     >
         <!-- Search area -->
         <div
-            class="select-input-container"
             ref="inputContainer"
+            class="select-input-container"
+            :class="{ 'select-input-container--disabled': disabled }"
         >
             <input
                 v-model="search"
@@ -17,14 +18,14 @@
                 :aria-controls="optionsId"
                 :id="id"
                 :placeholder="search ? '' : displayedPlaceholder"
-                :readonly="!searchable"
+                :readonly="!searchable || disabled"
                 @keydown.enter="openOptions(true)"
                 @keydown.down="openOptions(true)"
                 @click="searchable ? openOptions() : toggleOptions()"
             />
 
             <button
-                v-if="clearable && this.selectedValues.length"
+                v-if="clearable && this.selectedValues.length && !disabled"
                 aria-label="Clear selection"
                 class="select-input-clear"
                 type="button"
@@ -36,7 +37,7 @@
 
         <!-- Options dropdown -->
         <div
-            v-show="isOpen"
+            v-show="isOpen && !disabled"
             ref="optionsContainer"
             class="select-options-container"
             :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
@@ -89,6 +90,10 @@ export default {
     props: {
         clearable: {
             default: true,
+            type: Boolean
+        },
+        disabled: {
+            default: false,
             type: Boolean
         },
         id: {
@@ -230,7 +235,7 @@ export default {
          * @returns {Promise<void>}
          */
         async openOptions(focus = false) {
-            if (this.isOpen) return;
+            if (this.isOpen || this.disabled) return;
             this.isOpen = true;
 
             this.initialMaxHeight = `${this.viewportMaxHeight}px`;
@@ -258,7 +263,7 @@ export default {
          * TODO
          */
         closeOptions(focus = false) {
-            if (!this.isOpen) return;
+            if (!this.isOpen || this.disabled) return;
             this.isOpen = false;
 
             if (focus) this.focusInput()
@@ -274,6 +279,8 @@ export default {
          * TODO used specifically for when search is disabled, toggles when clicking the input.
          */
         toggleOptions() {
+            if (this.disabled) return
+
             this.isOpen ? this.closeOptions() : this.openOptions()
         },
 
@@ -430,6 +437,12 @@ export default {
 
 .select-input-container:focus-within {
     outline: 1px solid;
+}
+
+.select-input-container--disabled {
+    background: #eee;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .select-input-input {
