@@ -196,13 +196,11 @@ export default {
             validator: (value) => {
                 // Checks that the data structure contains text and value keys, for both flat and grouped objects.
                 const isValid = !value || value.every(item => {
-                    // If the item is a group, it must have a "label" and "options" array
                     if (item.group) {
                         return typeof item.group === 'string' &&
                             Array.isArray(item.options) &&
                             item.options.every(option => option?.text && option?.value)
                     }
-                    // If the item is not a group, it must have "text" and "value"
                     return item?.text && item?.value
                 })
 
