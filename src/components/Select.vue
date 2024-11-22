@@ -19,7 +19,7 @@
                 class="select-input-input"
                 type="text"
                 :aria-controls="optionsId"
-                :aria-describedby="`${id}_selected`"
+                :aria-describedby="`${id}_instructions`"
                 :aria-expanded="isOpen"
                 :aria-label="ariaLang.inputAria"
                 :id="id"
