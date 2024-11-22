@@ -290,8 +290,8 @@ export default {
         viewportMaxHeight() {
             const smBreakpoint = 640
             return window.innerWidth < smBreakpoint
-                ? window.innerHeight // Mobile: Use viewport height
-                : 200 // Default: 200px maxHeight
+                ? window.innerHeight
+                : 200
         },
 
         /**
@@ -311,20 +311,26 @@ export default {
                 if (this.selectedValues.length === this.options.flatMap(o => (o.group ? o.options : o)).length) {
                     return 'All options selected'
                 }
+
                 if (this.selectedValues.length > 1) {
                     return `${this.selectedValues.length} options selected`
                 }
+
                 const selectedOption = this.options
                     .flatMap(o => (o.group ? o.options : o))
                     .find(option => option.value === this.selectedValues[0])
+
                 return selectedOption ? selectedOption.text : this.placeholder
             }
+
             if (this.selectedValues.length) {
                 const selectedOption = this.options
                     .flatMap(o => (o.group ? o.options : o))
                     .find(option => option.value === this.selectedValues[0])
+
                 return selectedOption ? selectedOption.text : this.placeholder
             }
+
             return null
         },
 
@@ -370,87 +376,26 @@ export default {
 
     methods: {
         /**
-         * todo
-         * @param newValue
+         * TODO
          */
-        setInitialSelected(newValue) {
-            const values = Array.isArray(newValue) ? newValue : [newValue]
-
-            // Flatten grouped options to simplify value matching
-            const flattenedOptions = this.options.flatMap(option =>
-                option.group ? option.options : option
-            )
-
-            // Filter and map unique values
-            this.selectedValues = [...new Set(flattenedOptions
-                .filter(option => values.includes(option.value) && !option.disabled)
-                .map(option => option.value)
-            )]
-        },
-
-        /**
-         * Todo
-         * @param value
-         * @returns {boolean}
-         */
-        isOptionSelected(value) {
-            return !!this.selectedValues?.includes(value)
-        },
-
-        /**
-         * Todo
-         * @param option
-         */
-        setSelected(option) {
-            if (option.disabled) return
-
-            const newValue = option.value
-
-            if (this.multiple) {
-                // Toggle selection for multiple mode
-                if (this.selectedValues.includes(newValue)) {
-                    this.selectedValues = this.selectedValues.filter(val => val !== newValue)
-                } else {
-                    this.selectedValues = [...this.selectedValues, newValue]
-                }
-            } else {
-                // Single selection mode
-                this.selectedValues = [newValue]
-                this.closeOptions(true)
+        cleanupPositioning() {
+            if (this.cleanupAutoUpdate) {
+                this.cleanupAutoUpdate()
+                this.cleanupAutoUpdate = null
             }
-
-            this.$emit('input', this.multiple ? this.selectedValues : newValue) // Emit updated values
         },
 
         /**
-         * Todo
-         * @param focus
-         * @returns {Promise<void>}
+         * TODO
          */
-        async openOptions(focus = false) {
-            if (this.isOpen || this.disabled) return
-            this.isOpen = true
+        clearSelection() {
+            this.selectedValues = []
+            this.$emit('input', this.multiple ? [] : null)
 
-            this.initialMaxHeight = this.viewportMaxHeight
-            this.initAutoPositioning()
-
-            // Focus on the first available option when opening via keyboard controls.
-            if (focus) {
-                // We need to wait for options to exist in the DOM before focusing, nextTick doesn't work for this so we use requestAnimationFrame.
-                await new Promise((resolve) => requestAnimationFrame(resolve))
-
-                const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
-                for (const option of options) {
-                    if (option.getAttribute('aria-disabled') !== 'true') {
-                        option.focus() // Focus the first enabled option
-                        break
-                    }
-                }
-            }
-
-            document.addEventListener('keydown', this.handleKeyDown) // Add keyboard listener
-            document.addEventListener('mousedown', this.handleClickOutside) // Listen for outside clicks
+            this.closeOptions()
+            this.focusInput()
         },
+
 
         /**
          * TODO
@@ -469,12 +414,10 @@ export default {
         },
 
         /**
-         * TODO used specifically for when search is disabled, toggles when clicking the input.
+         * TODO
          */
-        toggleOptions() {
-            if (this.disabled) return
-
-            this.isOpen ? this.closeOptions() : this.openOptions()
+        focusInput() {
+            this.$refs.inputContainer.querySelector('input').focus()
         },
 
         /**
@@ -485,53 +428,6 @@ export default {
             const container = this.$el
             if (!container.contains(event.target)) {
                 this.closeOptions() // Close if the click is outside
-            }
-        },
-
-        /**
-         * TODO
-         */
-        initAutoPositioning() {
-            const inputContainer = this.$refs.inputContainer
-            const optionsContainer = this.$refs.optionsContainer
-
-            if (!inputContainer || !optionsContainer) return
-
-            this.cleanupAutoUpdate = autoUpdate(inputContainer, optionsContainer, () => {
-                computePosition(inputContainer, optionsContainer, {
-                    placement: 'bottom-start',
-                    middleware: [
-                        offset(1),
-                        flip(),
-                        shift(),
-                        size({
-                            apply: ({ availableHeight, elements }) => {
-                                const maxHeight = Math.min(availableHeight, this.viewportMaxHeight)
-                                Object.assign(elements.floating.style, {
-                                    maxHeight: `${maxHeight}px`,
-                                    overflowY: 'auto',
-                                    width: '100%',
-                                })
-                            },
-                        }),
-                    ],
-                }).then(({ x, y }) => {
-                    this.floatingStyles = {
-                        position: 'absolute',
-                        top: `${y}px`,
-                        left: `${x}px`,
-                    }
-                })
-            })
-        },
-
-        /**
-         * TODO
-         */
-        cleanupPositioning() {
-            if (this.cleanupAutoUpdate) {
-                this.cleanupAutoUpdate()
-                this.cleanupAutoUpdate = null
             }
         },
 
@@ -593,32 +489,176 @@ export default {
         /**
          * TODO
          */
-        clearSelection() {
-            this.selectedValues = []
-            this.$emit('input', this.multiple ? [] : null)
+        initAutoPositioning() {
+            const inputContainer = this.$refs.inputContainer
+            const optionsContainer = this.$refs.optionsContainer
 
-            this.closeOptions()
-            this.focusInput()
+            if (!inputContainer || !optionsContainer) return
+
+            this.cleanupAutoUpdate = autoUpdate(inputContainer, optionsContainer, () => {
+                computePosition(inputContainer, optionsContainer, {
+                    placement: 'bottom-start',
+                    middleware: [
+                        offset(1),
+                        flip(),
+                        shift(),
+                        size({
+                            apply: ({ availableHeight, elements }) => {
+                                const maxHeight = Math.min(availableHeight, this.viewportMaxHeight)
+                                Object.assign(elements.floating.style, {
+                                    maxHeight: `${maxHeight}px`,
+                                    overflowY: 'auto',
+                                    width: '100%',
+                                })
+                            },
+                        }),
+                    ],
+                }).then(({ x, y }) => {
+                    this.floatingStyles = {
+                        position: 'absolute',
+                        top: `${y}px`,
+                        left: `${x}px`,
+                    }
+                })
+            })
         },
 
         /**
-         * TODO
+         * Todo
+         * @param value
+         * @returns {boolean}
          */
-        focusInput() {
-            this.$refs.inputContainer.querySelector('input').focus()
+        isOptionSelected(value) {
+            return !!this.selectedValues?.includes(value)
+        },
+
+        /**
+         * Todo
+         * @param focus
+         * @returns {Promise<void>}
+         */
+        async openOptions(focus = false) {
+            if (this.isOpen || this.disabled) return
+            this.isOpen = true
+
+            this.initialMaxHeight = this.viewportMaxHeight
+            this.initAutoPositioning()
+
+            // Focus on the first available option when opening via keyboard controls.
+            if (focus) {
+                // We need to wait for options to exist in the DOM before focusing, nextTick doesn't work for this so we use requestAnimationFrame.
+                await new Promise((resolve) => requestAnimationFrame(resolve))
+
+                const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
+                for (const option of options) {
+                    if (option.getAttribute('aria-disabled') !== 'true') {
+                        option.focus() // Focus the first enabled option
+                        break
+                    }
+                }
+            }
+
+            document.addEventListener('keydown', this.handleKeyDown) // Add keyboard listener
+            document.addEventListener('mousedown', this.handleClickOutside) // Listen for outside clicks
         },
 
         /**
          * Todo - when we have more results we need to request them from the parent.
          */
         requestMoreOptions() {
-            if (this.loadingMore) return // Prevent multiple requests
-            this.loadingMore = true // Start loading state
+            if (this.loadingMore) return
+
+            this.loadingMore = true
             this.$emit('load-more-options')
+        },
+
+        /**
+         * todo
+         * @param newValue
+         */
+        setInitialSelected(newValue) {
+            const values = Array.isArray(newValue) ? newValue : [newValue]
+
+            const flattenedOptions = this.options.flatMap(option =>
+                option.group ? option.options : option
+            )
+
+            // TODO simplify this.
+            this.selectedValues = [...new Set(flattenedOptions
+                .filter(option => values.includes(option.value) && !option.disabled)
+                .map(option => option.value)
+            )]
+        },
+
+        /**
+         * Todo
+         * @param option
+         */
+        setSelected(option) {
+            if (option.disabled) return
+
+            const newValue = option.value
+
+            if (this.multiple) {
+                this.selectedValues =
+                    this.selectedValues.includes(newValue) ?
+                        this.selectedValues.filter(val => val !== newValue) :
+                        this.selectedValues = [...this.selectedValues, newValue]
+            } else {
+                this.selectedValues = [newValue]
+                this.closeOptions(true)
+            }
+
+            this.$emit('input', this.multiple ? this.selectedValues : newValue)
+        },
+
+        /**
+         * TODO used specifically for when search is disabled, toggles when clicking the input.
+         */
+        toggleOptions() {
+            if (this.disabled) return
+
+            this.isOpen ? this.closeOptions() : this.openOptions()
         }
     },
 
     watch: {
+        /**
+         * TODO
+         * @param updatedOptions
+         */
+        options: {
+            immediate: true,
+            handler(updatedOptions) {
+                if (this.loadingMore) {
+                    const optionsContainer = this.$refs.optionsContainer
+
+                    if (optionsContainer) {
+                        // Check if the options are grouped.
+                        const allGroups = Array.from(optionsContainer.querySelectorAll('[role="group"]'))
+
+                        if (allGroups.length > 0) {
+                            const lastGroup = allGroups[allGroups.length - 1]
+                            const lastItem = lastGroup.querySelector('.select-options-item:last-child')
+
+                            if (lastItem) lastItem.focus()
+                        } else {
+                            const allOptions = Array.from(optionsContainer.querySelectorAll('.select-options-item'))
+
+                            if (allOptions.length > this.currentOptionsLength) {
+                                allOptions[this.currentOptionsLength]?.focus()
+                            }
+                        }
+                    }
+
+                    this.currentOptionsLength = updatedOptions.length
+                    this.loadingMore = false
+                } else {
+                    this.currentOptionsLength = updatedOptions.length
+                }
+            }
+        },
+
         /**
          * Open the options when the user starts typing.
          * @param newValue
@@ -633,45 +673,6 @@ export default {
             handler(newValue) {
                 this.setInitialSelected(newValue)
             }
-        },
-
-        /**
-         * TODO
-         * @param updatedOptions
-         */
-        options: {
-            immediate: true,
-            handler(updatedOptions) {
-                if (this.loadingMore) {
-                    const optionsContainer = this.$refs.optionsContainer
-
-                    if (optionsContainer) {
-                        // Handle grouped options
-                        const allGroups = Array.from(optionsContainer.querySelectorAll('[role="group"]'))
-
-                        if (allGroups.length > 0) {
-                            const lastGroup = allGroups[allGroups.length - 1]
-                            const lastItem = lastGroup.querySelector('.select-options-item:last-child')
-
-                            if (lastItem) {
-                                lastItem.focus() // Focus the last item in the last group
-                            }
-                        } else {
-                            // Handle ungrouped options
-                            const allOptions = Array.from(optionsContainer.querySelectorAll('.select-options-item'))
-
-                            if (allOptions.length > this.currentOptionsLength) {
-                                allOptions[this.currentOptionsLength]?.focus() // Focus the first newly added option
-                            }
-                        }
-                    }
-
-                    this.currentOptionsLength = updatedOptions.length // Update the length
-                    this.loadingMore = false // Reset loading state
-                } else {
-                    this.currentOptionsLength = updatedOptions.length // Regular update
-                }
-            }
         }
     },
 
@@ -684,7 +685,6 @@ export default {
     },
 }
 </script>
-
 
 <!-- todo might not need to be scoped -->
 <style scoped>
