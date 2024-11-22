@@ -468,8 +468,13 @@ export default {
     justify-content: center;
     width: 44px;
 }
-.select-input-clear:hover {
+
+.select-input-clear:hover,
+.select-input-clear:focus {
     background: #eee;
+}
+.select-input-clear:focus {
+    outline: 1px solid;
 }
 
 .select-options-container {
