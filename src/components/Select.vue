@@ -21,7 +21,7 @@
                 :aria-controls="optionsId"
                 :aria-describedby="`${id}_instructions`"
                 :aria-expanded="isOpen"
-                :aria-label="ariaLang.inputAria"
+                :aria-label="ariaLang.inputLabel"
                 :id="id"
                 :placeholder="search ? '' : displayedPlaceholder"
                 :readonly="!searchable || disabled"
@@ -154,7 +154,7 @@
             id="id_instructions"
             class="select-sr-only"
         >
-            {{ ariaLang.inputAria }}
+            {{ ariaLang.instructions }}
         </div>
     </div>
 </template>
@@ -295,6 +295,14 @@ export default {
          * @returns {*|string}
          */
         displayedPlaceholder() {
+            return this.selectedText || this.placeholder;
+        },
+
+        /**
+         * TODO abstracted selected text
+         * @returns {*|string|null|string}
+         */
+        selectedText() {
             if (this.multiple && this.selectedValues?.length) {
                 if (this.selectedValues.length === this.options.flatMap(o => (o.group ? o.options : o)).length) {
                     return 'All options selected';
@@ -313,7 +321,7 @@ export default {
                     .find(option => option.value === this.selectedValues[0]);
                 return selectedOption ? selectedOption.text : this.placeholder;
             }
-            return this.placeholder;
+            return null
         },
 
         /**
@@ -321,20 +329,19 @@ export default {
          * @returns {{inputAria: string, clearSelection: string, listDescription: string}}
          */
         ariaLang() {
-            const controls = `Use the arrow keys to navigate options, to select ${this.multiple ? 'one or more options' : 'an option'} press the space or enter key.`;
+            const controls = `Use the arrow keys to navigate, and press Enter or Space to select ${this.multiple ? 'one or more options' : 'an option'}.`;
+            const instructions = `Press Enter to open the list of options. ${this.searchable ? 'Type to search, ' : ''}${controls}`;
 
-            const inputAria = this.disabled
-                ? 'Select is disabled'
-                : `Press Enter to open the list of options. ${
-                    this.searchable
-                        ? `Type to search and select ${this.multiple ? 'one or more options' : 'an option'}. `
-                        : ''
-                }${controls}`;
+            const selectedText = this.selectedText ? `${this.selectedText}.` : '';
+            const inputLabel = this.disabled
+                ? `${selectedText} Select is disabled.`
+                : `${selectedText} ${instructions}`;
 
             return {
                 clearSelection: 'Clear selection',
                 listDescription: controls,
-                inputAria
+                inputLabel,
+                instructions,
             };
         },
 
