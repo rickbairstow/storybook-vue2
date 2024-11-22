@@ -21,6 +21,7 @@
                 :readonly="!searchable || disabled"
                 @keydown.enter="openOptions(true)"
                 @keydown.down="openOptions(true)"
+                @keydown.space.prevent="!searchable && openOptions(true)"
                 @click="searchable ? openOptions() : toggleOptions()"
             />
 
