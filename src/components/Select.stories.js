@@ -42,7 +42,7 @@ export default {
         value: { control: { type: 'text' } }, // Storybook doesn't have the ability to set dynamic type.
     },
     args: {
-        clearable: true,
+        clearable: false,
         disabled: false,
         id: 'single-select',
         hasMoreOptions: false,

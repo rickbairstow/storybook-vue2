@@ -157,7 +157,7 @@ import { computePosition, autoUpdate, offset, flip, shift, size } from '@floatin
 export default {
     props: {
         clearable: {
-            default: true,
+            default: false,
             type: Boolean
         },
         disabled: {
