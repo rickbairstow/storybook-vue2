@@ -49,38 +49,55 @@
             class="select-options-container"
             :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
         >
-            <ul
-                v-if="filteredOptions.length > 0"
-                class="select-options-list"
-                role="listbox"
-                tabindex="0"
-                :aria-description="ariaLang.listDescription"
-                :aria-multiselectable="multiple"
-                :id="optionsId"
-            >
-                <li
-                    v-for="option in filteredOptions"
-                    class="select-options-item"
-                    role="option"
-                    tabindex="0"
-                    :aria-disabled="option.disabled"
-                    :aria-label="option.text"
-                    :aria-selected="isOptionSelected(option.value)"
-                    :key="option.value"
-                    @click="setSelected(option)"
-                >
-                    {{ option.text }}
-
+            <template v-if="filteredOptions.length > 0">
+                <template v-for="(item, index) in filteredOptions">
                     <div
-                        v-if="isOptionSelected(option.value)"
-                        aria-hidden="true"
-                        class="flex-none"
+                        v-if="item.group"
+                        :key="`select_group_${index}`"
+                        class="select-options-group-header"
                     >
-                        TICK
+                        {{ item.group }}
                     </div>
-                </li>
-            </ul>
 
+                    <!-- Grouped options -->
+                    <ul
+                        v-if="item.group"
+                        class="select-options-list"
+                        :key="`group-options-${item.group}`"
+                    >
+                        <li
+                            v-for="option in item.options"
+                            class="select-options-item"
+                            role="option"
+                            tabindex="0"
+                            :aria-disabled="option.disabled"
+                            :aria-label="option.text"
+                            :aria-selected="isOptionSelected(option.value)"
+                            :key="option.value"
+                            @click="setSelected(option)"
+                        >
+                            {{ option.text }}
+                        </li>
+                    </ul>
+
+                    <!-- Ungrouped options -->
+                    <li
+                        v-else
+                        class="select-options-item"
+                        role="option"
+                        tabindex="0"
+                        :aria-disabled="item.disabled"
+                        :aria-label="item.text"
+                        :aria-selected="isOptionSelected(item.value)"
+                        :key="item.value"
+                        @click="setSelected(item)"
+                    >
+                        {{ item.text }}
+                    </li>
+                </template>
+            </template>
+
+            <!-- No options feedback -->
             <p
                 v-else
                 aria-live="polite"
@@ -88,7 +105,7 @@
                 No options found.
             </p>
 
-            <!-- Pagination - sends a request to the parent to load more options. -->
+            <!-- Load more options -->
             <button
                 v-if="hasMoreOptions"
                 ref="loadMoreButton"
@@ -143,13 +160,26 @@ export default {
             type: Array,
             default: () => [],
             validator: (value) => {
-                // Custom validator to make sure text and value keys exist.
-                const isValid = !value || value.every(item => item?.text && item?.value)
-                if (!isValid) throw new Error(
-                    'Invalid options: Each option requires a "text" and "value" key.\n' +
-                    JSON.stringify(value, null, 2)
-                )
-                return isValid
+                // Checks that the data structure contains text and value keys, for both flat and grouped objects.
+                const isValid = !value || value.every(item => {
+                    // If the item is a group, it must have a "label" and "options" array
+                    if (item.group) {
+                        return typeof item.group === 'string' &&
+                            Array.isArray(item.options) &&
+                            item.options.every(option => option?.text && option?.value);
+                    }
+                    // If the item is not a group, it must have "text" and "value"
+                    return item?.text && item?.value;
+                });
+
+                if (!isValid) {
+                    throw new Error(
+                        'Invalid options: Each item must be an option with "text" and "value", or a group with "label" and "options".\n' +
+                        JSON.stringify(value, null, 2)
+                    );
+                }
+
+                return isValid;
             }
         },
         placeholder: {
@@ -194,11 +224,29 @@ export default {
          * @returns {*[]}
          */
         filteredOptions() {
-            if (!this.search) return this.options; // If no search term, return all options.
+            if (!this.search) {
+                console.log('Filtered Options:', this.options);
+                return this.options;
+            }
 
             const searchTerm = this.search.trim().toLowerCase();
 
-            return this.options.filter((option) => option.text.toLowerCase().includes(searchTerm));
+            const filtered = this.options.map(item => {
+                if (item.group) {
+                    const filteredGroupOptions = item.options.filter(option =>
+                        option.text.toLowerCase().includes(searchTerm)
+                    );
+                    return filteredGroupOptions.length
+                        ? { group: item.group, options: filteredGroupOptions }
+                        : null;
+                } else if (item.text.toLowerCase().includes(searchTerm)) {
+                    return item;
+                }
+                return null;
+            }).filter(Boolean);
+
+            console.log('Filtered Options:', filtered);
+            return filtered;
         },
 
         /**
@@ -620,6 +668,13 @@ export default {
     margin: 0;
 }
 
+.select-options-group-header {
+    font-weight: bold;
+    padding: 8px 16px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+}
+
 .select-options-item {
     cursor: pointer;
     display: flex;
@@ -628,7 +683,9 @@ export default {
     padding: 8px 16px;
 }
 
-.select-options-item[aria-disabled="true"] {
+.select-options-item[aria-disabled="true"],
+.select-options-item[aria-disabled="true"]:hover,
+.select-options-item[aria-disabled="true"]:focus {
     background-color: #eee;
     color: #666;
     cursor: not-allowed;
@@ -639,7 +696,7 @@ export default {
 .select-options-load-more:focus,
 .select-options-item:hover,
 .select-options-item:focus {
-    background-color: #eee;
+    background-color: #ccc;
 }
 
 .select-options-load-more {
@@ -668,12 +725,15 @@ export default {
 }
 
 .select-input-container:focus-within,
-.select-input-clear:focus {
-    outline: 1px solid; /* todo need to check whats in UiKit for this re: color */
+.select-input-clear:focus,
+.select-options-item:focus,
+.select-options-load-more:focus {
+    outline: 1px solid; /* todo need to check whats in UiKit for this for colours */
 }
-
-.select-options-item:focus {
-    outline: none;
+.select-input-clear:focus,
+.select-options-item:focus,
+.select-options-load-more:focus {
+    outline-offset: -1px;
 }
 
 @media (min-width: 640px) {

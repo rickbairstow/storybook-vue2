@@ -7,7 +7,26 @@ const options = Array.from({ length: 5 }, (_, i) => ({
     disabled: Math.random() > 0.9, // Randomly disable options
 }))
 
-options.push({ value: 'something', text: 'Some really long option that should cause the input to be extremely long', disabled: false })
+options.push({ value: 'long_test', text: 'Some really long option that should cause the input to be extremely long', disabled: false })
+
+const groupedOptions = [
+    {
+        group: 'Group 1',
+        options: Array.from({ length: 5 }, (_, i) => ({
+            value: i + 1,
+            text: `Option ${i + 1}`,
+            disabled: Math.random() > 0.9, // Randomly disable options
+        })),
+    },
+    {
+        group: 'Group 2',
+        options: Array.from({ length: 5 }, (_, i) => ({
+            value: i + 6,
+            text: `Option ${i + 6}`,
+            disabled: Math.random() > 0.9, // Randomly disable options
+        })),
+    },
+];
 
 export default {
     components: { Select },
@@ -29,7 +48,8 @@ export default {
         hasMoreOptions: false,
         multiple: false,
         placeholder: 'Select an option, or type to search',
-        options: options,
+        // options: options,
+        options: groupedOptions,
         searchable: true,
         wide: false,
         value: 1, // Default v-model value is null
