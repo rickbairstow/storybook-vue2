@@ -78,7 +78,7 @@
                             tabindex="0"
                             :aria-disabled="option.disabled"
                             :aria-label="option.text"
-                            :aria-selected="isOptionSelected(option.value)"
+                            :aria-selected="isOptionSelected(option.value) ? 'true' : 'false'"
                             :key="option.value"
                             @click="setSelected(option)"
                         >
@@ -101,7 +101,7 @@
                         tabindex="0"
                         :aria-disabled="item.disabled"
                         :aria-label="item.text"
-                        :aria-selected="isOptionSelected(item.value)"
+                        :aria-selected="isOptionSelected(item.value) ? 'true' : 'false'"
                         :key="item.value"
                         @click="setSelected(item)"
                     >
@@ -382,7 +382,7 @@ export default {
          * @returns {boolean}
          */
         isOptionSelected(value) {
-            return this.selectedValues?.includes(value);
+            return !!this.selectedValues?.includes(value);
         },
 
         /**
