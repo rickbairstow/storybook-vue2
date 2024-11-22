@@ -115,7 +115,10 @@ export default {
             validator: (value) => {
                 // Custom validator to make sure text and value keys exist.
                 const isValid = !value || value.every(item => item?.text && item?.value)
-                if (!isValid) throw new Error('Invalid options: Each option must have a "text" and "value" key.')
+                if (!isValid) throw new Error(
+                    'Invalid options: Each option requires a "text" and "value" key.\n' +
+                    JSON.stringify(value, null, 2)
+                )
                 return isValid
             }
         },
