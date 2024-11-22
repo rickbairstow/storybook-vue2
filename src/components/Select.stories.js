@@ -41,6 +41,18 @@ export default {
         },
         value: { control: { type: 'text' } }, // Storybook doesn't have the ability to set dynamic type.
     },
+    args: {
+        clearable: true,
+        disabled: false,
+        id: 'single-select',
+        hasMoreOptions: false,
+        multiple: false,
+        placeholder: 'Select an option',
+        options: options,
+        searchable: true,
+        wide: false,
+        value: null,
+    }
 };
 
 // Template for all stories
@@ -103,32 +115,32 @@ const Template = (args, { argTypes }) => ({
     `,
 });
 
-// Default single-select story
-export const SingleSelect = Template.bind({});
-SingleSelect.args = {
-    clearable: true,
-    disabled: false,
-    id: 'single-select',
-    hasMoreOptions: false,
-    multiple: false,
-    placeholder: 'Select an option',
-    options: options,
-    searchable: true,
-    wide: false,
-    value: null,
-};
+export const SelectDefault = Template.bind({});
 
-// Grouped multi-select story
-export const GroupedMultiSelect = Template.bind({});
-GroupedMultiSelect.args = {
-    clearable: true,
-    disabled: false,
-    id: 'grouped-multi-select',
-    hasMoreOptions: false,
+export const MultipleSelect = Template.bind({});
+MultipleSelect.args = Object.assign({}, SelectDefault.args, {
+    multiple: true,
+    placeholder: 'Select multiple options',
+});
+
+export const MoreOptionsSelect = Template.bind({});
+MoreOptionsSelect.args = Object.assign({}, SelectDefault.args, {
+    hasMoreOptions: true
+});
+
+export const GroupedSelect = Template.bind({});
+GroupedSelect.args = Object.assign({}, SelectDefault.args, {
+    options: groupedOptions,
+});
+
+export const GroupedMultipleSelect = Template.bind({});
+GroupedMultipleSelect.args = Object.assign({}, GroupedSelect.args, {
     multiple: true,
     placeholder: 'Select multiple options',
     options: groupedOptions,
-    searchable: true,
-    wide: true,
-    value: null,
-};
+});
+
+export const MoreOptionsGroupedSelect = Template.bind({});
+MoreOptionsGroupedSelect.args = Object.assign({}, GroupedSelect.args, {
+    hasMoreOptions: true
+});
