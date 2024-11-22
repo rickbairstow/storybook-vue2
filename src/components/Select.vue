@@ -596,6 +596,14 @@ export default {
     },
 
     watch: {
+        /**
+         * Open the options when the user starts typing.
+         * @param newValue
+         */
+        search(newValue) {
+            if (newValue && !this.isOpen && !this.disabled) this.openOptions()
+        },
+
         // TODO - Track values to update selected values from the parent.
         value: {
             immediate: true,
