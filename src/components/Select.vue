@@ -79,7 +79,7 @@
                         TICK
                     </div>
                 </li>
-    </ul>
+            </ul>
 
             <p
                 v-else
@@ -91,11 +91,15 @@
             <!-- Pagination - sends a request to the parent to load more options. -->
             <button
                 v-if="hasMoreOptions"
+                ref="loadMoreButton"
                 class="select-options-load-more"
                 type="button"
+                tabindex="0"
+                :aria-disabled="loadingMore"
+                :class="{ 'select-options-load-more--disabled': loadingMore }"
                 @click="requestMoreOptions()"
             >
-                Load more...
+                {{ loadingMore ? 'Loading...' : 'Load more...' }}
             </button>
         </div>
 
@@ -169,12 +173,19 @@ export default {
     data() {
         return {
             cleanupAutoUpdate: null,
+            currentOptionsLength: 0,
             floatingStyles: {}, // Stores computed styles
             initialMaxHeight: '0px', // Ensures no "auto" height initially
             isOpen: false,
+            loadingMore: false,
             search: '', // Tracks the user's search input
             selectedValues: [], // Stores currently selected values
         };
+    },
+
+    mounted() {
+        // TODO - Set current length, this helps us set focus when loading more options.
+        this.currentOptionsLength = this.options?.length
     },
 
     computed: {
@@ -257,15 +268,6 @@ export default {
                 .join(', ');
 
             return `Selected options: ${selectedText}`;
-        }
-    },
-
-    watch: {
-        value: {
-            immediate: true,
-            handler(newValue) {
-                this.setInitialSelected(newValue);
-            }
         }
     },
 
@@ -388,10 +390,7 @@ export default {
             const inputContainer = this.$refs.inputContainer;
             const optionsContainer = this.$refs.optionsContainer;
 
-            if (!inputContainer || !optionsContainer) {
-                console.warn("Refs are not properly initialized.");
-                return;
-            }
+            if (!inputContainer || !optionsContainer) return
 
             this.cleanupAutoUpdate = autoUpdate(inputContainer, optionsContainer, () => {
                 computePosition(inputContainer, optionsContainer, {
@@ -439,41 +438,30 @@ export default {
             if (!this.isOpen) return;
 
             const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
-            const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true');
-            const focusedIndex = enabledOptions.indexOf(document.activeElement);
+            const loadMoreButton = this.$refs.loadMoreButton;
+            const navigableElements = [...options, loadMoreButton].filter(Boolean); // Include the Load More button
+
+            const focusedIndex = navigableElements.indexOf(document.activeElement);
 
             if (event.key === 'ArrowDown') {
                 event.preventDefault(); // Prevent page scrolling
 
-                // Focus the next enabled option
-                const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % enabledOptions.length;
-                enabledOptions[nextIndex]?.focus();
-                return;
-            }
-
-            if (event.key === 'ArrowUp') {
+                // Focus the next element
+                const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % navigableElements.length;
+                navigableElements[nextIndex]?.focus();
+            } else if (event.key === 'ArrowUp') {
                 event.preventDefault(); // Prevent page scrolling
 
-                // Focus the previous enabled option
-                const prevIndex = focusedIndex === -1 ? enabledOptions.length - 1 : (focusedIndex - 1 + enabledOptions.length) % enabledOptions.length;
-                enabledOptions[prevIndex]?.focus();
-                return;
-            }
-
-            // Handle selection only if focused on an option
-            if ((event.key === 'Enter' || event.key === ' ') && options.includes(document.activeElement)) {
+                // Focus the previous element
+                const prevIndex = focusedIndex === -1 ? navigableElements.length - 1 : (focusedIndex - 1 + navigableElements.length) % navigableElements.length;
+                navigableElements[prevIndex]?.focus();
+            } else if ((event.key === 'Enter' || event.key === ' ') && document.activeElement === loadMoreButton) {
                 event.preventDefault();
 
-                // Select the currently focused option
-                if (document.activeElement && enabledOptions.includes(document.activeElement)) {
-                    const option = this.filteredOptions[options.indexOf(document.activeElement)];
-                    this.setSelected(option);
-                }
-                return;
-            }
-
-            // Allow native Tab behavior to exit the options dropdown
-            if (event.key === 'Tab') {
+                // Trigger "Load More" when the button is focused
+                this.requestMoreOptions();
+            } else if (event.key === 'Tab') {
+                // Allow Tab to exit the dropdown
                 this.closeOptions();
             }
         },
@@ -499,8 +487,52 @@ export default {
          * Todo - when we have more results we need to request them from the parent.
          */
         requestMoreOptions() {
-            this.$emit('load-more-options')
+            if (this.loadingMore) return; // Prevent multiple requests
+            this.loadingMore = true; // Start loading state
+            this.$emit('load-more-options');
+        },
+
+        /**
+         * Focus the last option or "Load More" button after options are loaded
+         */
+        focusLastLoadedOption() {
+            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
+            const lastOption = options[options.length - 1];
+            const loadMoreButton = this.$refs.loadMoreButton;
+
+            if (lastOption) {
+                lastOption.focus(); // Focus the last newly loaded option
+            } else if (loadMoreButton) {
+                loadMoreButton.focus(); // Fallback to focusing the "Load More" button
+            }
         }
+    },
+
+    watch: {
+        // TODO - Track values to update selected values from the parent.
+        value: {
+            immediate: true,
+            handler(newValue) {
+                this.setInitialSelected(newValue);
+            }
+        },
+
+        /**
+         * TODO
+         * @param updatedOptions
+         */
+        options: {
+            handler(updatedOptions) {
+                if (!this.hasMoreOptions || !this.loadingMore) return
+
+                // Set focus to the last option in the previous options.
+                this.$refs.optionsContainer?.querySelectorAll('.select-options-item')[this.currentOptionsLength - 1].focus()
+
+                this.loadingMore = false; // Options have loaded, set loading state to false.
+                this.currentOptionsLength = updatedOptions.length; // Update the stored current options length
+            },
+            immediate: true, // Initialize the watcher
+        },
     },
 
     /**
@@ -617,6 +649,10 @@ export default {
     cursor: pointer;
     padding: 8px 16px;
     width: 100%;
+}
+
+.select-options-load-more--disabled {
+    pointer-events: none;
 }
 
 .select-sr-only {

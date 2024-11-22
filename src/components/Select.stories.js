@@ -54,13 +54,17 @@ const Template = (args, { argTypes }) => ({
         updateValue(newValue) {
             this.localValue = newValue; // Update localValue from Select's input
         },
-        addMoreOptions() {
-            for(let i = 0; i < 5; i++) {
+
+        async addMoreOptions() {
+            // Simulate a delay for testing
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            for (let i = 0; i < 5; i++) {
                 this.localOptions.push({
                     value: Math.floor(Math.random() * 1000),
                     text: `New Option ${Math.floor(Math.random() * 1000)}`,
                     disabled: Math.random() > 0.8,
-                })
+                });
             }
         },
     },
