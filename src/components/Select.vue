@@ -730,7 +730,7 @@ export default {
 }
 
 .select-options-group-header {
-    font-weight: bold;
+    font-weight: 700;
     padding: 8px 16px;
     background-color: #f9f9f9;
     border-bottom: 1px solid #ddd;
@@ -797,9 +797,8 @@ export default {
 .select-input-clear:focus,
 .select-options-item:focus,
 .select-options-load-more:focus {
-    outline: 1px solid; /* todo need to check whats in UiKit for this for colours */
+    outline: 1px solid;
 }
-.select-input-clear:focus,
 .select-options-item:focus,
 .select-options-load-more:focus {
     outline-offset: -1px;
