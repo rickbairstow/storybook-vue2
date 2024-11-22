@@ -27,6 +27,7 @@ export default {
         multiple: false,
         placeholder: 'Select an option, or type to search',
         options: options,
+        searchable: true,
         value: 1, // Default v-model value is null
     },
 };
