@@ -576,17 +576,39 @@ export default {
          * @param updatedOptions
          */
         options: {
+            immediate: true,
             handler(updatedOptions) {
-                if (!this.hasMoreOptions || !this.loadingMore) return
+                if (this.loadingMore) {
+                    const optionsContainer = this.$refs.optionsContainer;
 
-                // Set focus to the last option in the previous options.
-                this.$refs.optionsContainer?.querySelectorAll('.select-options-item')[this.currentOptionsLength - 1].focus()
+                    if (optionsContainer) {
+                        // Handle grouped options
+                        const allGroups = Array.from(optionsContainer.querySelectorAll('[role="group"]'));
 
-                this.loadingMore = false; // Options have loaded, set loading state to false.
-                this.currentOptionsLength = updatedOptions.length; // Update the stored current options length
-            },
-            immediate: true, // Initialize the watcher
-        },
+                        if (allGroups.length > 0) {
+                            const lastGroup = allGroups[allGroups.length - 1];
+                            const lastItem = lastGroup.querySelector('.select-options-item:last-child');
+
+                            if (lastItem) {
+                                lastItem.focus(); // Focus the last item in the last group
+                            }
+                        } else {
+                            // Handle ungrouped options
+                            const allOptions = Array.from(optionsContainer.querySelectorAll('.select-options-item'));
+
+                            if (allOptions.length > this.currentOptionsLength) {
+                                allOptions[this.currentOptionsLength]?.focus(); // Focus the first newly added option
+                            }
+                        }
+                    }
+
+                    this.currentOptionsLength = updatedOptions.length; // Update the length
+                    this.loadingMore = false; // Reset loading state
+                } else {
+                    this.currentOptionsLength = updatedOptions.length; // Regular update
+                }
+            }
+        }
     },
 
     /**

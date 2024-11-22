@@ -79,13 +79,27 @@ const Template = (args, { argTypes }) => ({
             // Simulate a delay for testing
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            for (let i = 0; i < 5; i++) {
+            if (args.options?.[0]?.group) {
+                // Push grouped options
                 this.localOptions.push({
-                    value: Math.floor(Math.random() * 1000),
-                    text: `New Option ${Math.floor(Math.random() * 1000)}`,
-                    disabled: Math.random() > 0.8,
+                    group: `Group ${Math.floor(Math.random() * 1000)}`,
+                    options: Array.from({ length: 5 }, (_, i) => ({
+                        value: i + 1,
+                        text: `Option ${Math.floor(Math.random() * 1000)}`,
+                        disabled: Math.random() > 0.9,
+                    }))
                 });
+            } else {
+                // Push single options
+                for (let i = 0; i < 5; i++) {
+                    this.localOptions.push({
+                        value: Math.floor(Math.random() * 1000),
+                        text: `New Option ${Math.floor(Math.random() * 1000)}`,
+                        disabled: Math.random() > 0.8,
+                    });
+                }
             }
+
         },
     },
     template: `
