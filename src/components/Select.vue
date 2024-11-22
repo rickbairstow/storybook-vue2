@@ -91,6 +91,7 @@
             <!-- Pagination - sends a request to the parent to load more options. -->
             <button
                 v-if="hasMoreOptions"
+                class="select-options-load-more"
                 type="button"
                 @click="requestMoreOptions()"
             >
@@ -581,10 +582,6 @@ export default {
     z-index: 10;
 }
 
-.select-options-wrapper {
-    position: relative;
-}
-
 .select-options-list {
     list-style: none;
     padding: 0;
@@ -596,12 +593,7 @@ export default {
     display: flex;
     gap: 8px;
     justify-content: space-between;
-    padding: 0.5rem 1rem;
-}
-
-.select-options-item:hover,
-.select-options-item:focus {
-    background-color: #eee;
+    padding: 8px 16px;
 }
 
 .select-options-item[aria-disabled="true"] {
@@ -609,6 +601,22 @@ export default {
     color: #666;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+.select-options-load-more:hover,
+.select-options-load-more:focus,
+.select-options-item:hover,
+.select-options-item:focus {
+    background-color: #eee;
+}
+
+.select-options-load-more {
+    all: unset;
+
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 8px 16px;
+    width: 100%;
 }
 
 .select-sr-only {
