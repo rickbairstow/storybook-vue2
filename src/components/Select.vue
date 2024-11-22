@@ -49,6 +49,10 @@
             class="select-options-container"
             :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
         >
+            <div
+                v-if="loading"
+                class="select-options-loading"
+            />
             <ul
                 v-if="filteredOptions.length > 0"
                 class="select-options-list"
@@ -116,6 +120,10 @@ export default {
         id: {
             required: true,
             type: String,
+        },
+        loading: {
+            default: false,
+            type: Boolean,
         },
         multiple: {
             type: Boolean,
@@ -556,9 +564,19 @@ export default {
     border-radius: 8px;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     color: #000;
-    position: absolute;
+    position: relative;
     transition: all 0.2s ease;
     z-index: 10;
+}
+
+.select-options-loading {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .select-options-list {
@@ -568,7 +586,6 @@ export default {
 }
 
 .select-options-item {
-    background-color: #ccc;
     cursor: pointer;
     display: flex;
     gap: 8px;
@@ -578,11 +595,11 @@ export default {
 
 .select-options-item:hover,
 .select-options-item:focus {
-    background-color: #e6f7ff;
+    background-color: #eee;
 }
 
 .select-options-item[aria-disabled="true"] {
-    background-color: #999;
+    background-color: #eee;
     color: #666;
     cursor: not-allowed;
     pointer-events: none;
@@ -601,10 +618,12 @@ export default {
 }
 
 .select-input-container:focus-within,
-.select-input-clear:focus,
-.select-options-item:hover,
+.select-input-clear:focus {
+    outline: 1px solid; /* todo need to check whats in UiKit for this re: color */
+}
+
 .select-options-item:focus {
-    outline: 1px solid;
+    outline: none;
 }
 
 @media (min-width: 640px) {
