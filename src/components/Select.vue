@@ -519,6 +519,9 @@ export default {
         handleKeyDown(event) {
             if (!this.isOpen) return;
 
+            const flatFilteredOptions = this.filteredOptions.flatMap(option =>
+                option.group ? option.options : option
+            );
             const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
             const loadMoreButton = this.$refs.loadMoreButton;
             const navigableElements = [...options, loadMoreButton].filter(Boolean); // Include the Load More button
@@ -537,11 +540,27 @@ export default {
                 // Focus the previous element
                 const prevIndex = focusedIndex === -1 ? navigableElements.length - 1 : (focusedIndex - 1 + navigableElements.length) % navigableElements.length;
                 navigableElements[prevIndex]?.focus();
-            } else if ((event.key === 'Enter' || event.key === ' ') && document.activeElement === loadMoreButton) {
+            } else if (event.key === 'Enter' || (event.key === ' ' && document.activeElement !== this.$refs.inputContainer.querySelector('input'))) {
+                // Handle Enter or Space only when not focused on input
                 event.preventDefault();
 
-                // Trigger "Load More" when the button is focused
-                this.requestMoreOptions();
+                if (document.activeElement) {
+                    const isOption = document.activeElement.classList.contains('select-options-item');
+                    const isLoadMore = document.activeElement === loadMoreButton;
+
+                    if (isOption) {
+                        // Get the index of the active DOM element
+                        const optionIndex = options.indexOf(document.activeElement);
+                        const selectedOption = flatFilteredOptions[optionIndex];
+
+                        if (selectedOption) {
+                            this.setSelected(selectedOption);
+                        }
+                    } else if (isLoadMore) {
+                        // Trigger "Load More"
+                        this.requestMoreOptions();
+                    }
+                }
             } else if (event.key === 'Tab') {
                 // Allow Tab to exit the dropdown
                 this.closeOptions();
