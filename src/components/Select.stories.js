@@ -1,7 +1,7 @@
 import Select from './Select.vue';
 
 // Generate dummy options
-const options = Array.from({ length: 50 }, (_, i) => ({
+const options = Array.from({ length: 5 }, (_, i) => ({
     value: i + 1,
     text: `Option ${i + 1}`,
     disabled: Math.random() > 0.9, // Randomly disable options
@@ -26,7 +26,7 @@ export default {
         clearable: true,
         disabled: false,
         id: 'test',
-        loading: false,
+        hasMoreOptions: false,
         multiple: false,
         placeholder: 'Select an option, or type to search',
         options: options,
@@ -36,31 +36,13 @@ export default {
     },
 };
 
-// const Template = (args, { argTypes }) => ({
-//     components: { Select },
-//     props: Object.keys(argTypes), // Dynamically map all args to props
-//     data() {
-//         return {
-//             modelValue: args.value, // Local v-model binding
-//         };
-//     },
-//     template: `
-//         <div>
-//             <Select
-//                 v-bind="$props"
-//                 v-model="modelValue"
-//             />
-//             <p>Selected Value: {{ modelValue }}</p> <!-- Display selected value -->
-//         </div>
-//     `,
-// });
-
 const Template = (args, { argTypes }) => ({
     components: { Select },
     props: Object.keys(argTypes), // Dynamically map all args to props
     data() {
         return {
             localValue: args.value, // Local v-model binding
+            localOptions: args.options // Local options to let me pass down extra options for load more
         };
     },
     watch: {
@@ -72,13 +54,24 @@ const Template = (args, { argTypes }) => ({
         updateValue(newValue) {
             this.localValue = newValue; // Update localValue from Select's input
         },
+        addMoreOptions() {
+            for(let i = 0; i < 5; i++) {
+                this.localOptions.push({
+                    value: Math.floor(Math.random() * 1000),
+                    text: `New Option ${Math.floor(Math.random() * 1000)}`,
+                    disabled: Math.random() > 0.8,
+                })
+            }
+        },
     },
     template: `
         <div>
             <Select 
                 v-bind="$props" 
                 :value="localValue"
+                :options="localOptions"
                 @input="updateValue"
+                @load-more-options="addMoreOptions()"
             />
             <p>Selected Value: {{ localValue }}</p> <!-- Display selected value -->
         </div>

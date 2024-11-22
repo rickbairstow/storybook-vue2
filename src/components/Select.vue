@@ -49,10 +49,6 @@
             class="select-options-container"
             :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
         >
-            <div
-                v-if="loading"
-                class="select-options-loading"
-            />
             <ul
                 v-if="filteredOptions.length > 0"
                 class="select-options-list"
@@ -83,7 +79,7 @@
                         TICK
                     </div>
                 </li>
-            </ul>
+    </ul>
 
             <p
                 v-else
@@ -91,6 +87,15 @@
             >
                 No options found.
             </p>
+
+            <!-- Pagination - sends a request to the parent to load more options. -->
+            <button
+                v-if="hasMoreOptions"
+                type="button"
+                @click="requestMoreOptions()"
+            >
+                Load more...
+            </button>
         </div>
 
         <!-- Assistive feedback for selected options -->
@@ -121,7 +126,7 @@ export default {
             required: true,
             type: String,
         },
-        loading: {
+        hasMoreOptions: {
             default: false,
             type: Boolean,
         },
@@ -487,6 +492,13 @@ export default {
          */
         focusInput() {
             this.$refs.inputContainer.querySelector('input').focus();
+        },
+
+        /**
+         * Todo - when we have more results we need to request them from the parent.
+         */
+        requestMoreOptions() {
+            this.$emit('load-more-options')
         }
     },
 
@@ -569,14 +581,8 @@ export default {
     z-index: 10;
 }
 
-.select-options-loading {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    pointer-events: none;
-    background-color: rgba(0, 0, 0, 0.1);
+.select-options-wrapper {
+    position: relative;
 }
 
 .select-options-list {
