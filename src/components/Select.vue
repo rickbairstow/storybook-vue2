@@ -3,18 +3,24 @@
         class="select-container"
         @keydown.esc="closeOptions(true)"
     >
-        <!-- Search area -->
+        <!-- Input / Search -->
         <div
             ref="inputContainer"
             class="select-input-container"
-            :class="{ 'select-input-container--disabled': disabled }"
+            :class="{
+                'select-input-container--disabled': disabled,
+                'select-input-container--wide': wide
+            }"
         >
             <input
                 v-model="search"
+                aria-haspopup="listbox"
                 autocomplete="off"
                 class="select-input-input"
                 type="text"
                 :aria-controls="optionsId"
+                :aria-describedby="`${id}_selected`"
+                :aria-expanded="isOpen"
                 :aria-label="ariaLang.inputAria"
                 :id="id"
                 :placeholder="search ? '' : displayedPlaceholder"
@@ -36,7 +42,7 @@
             </button>
         </div>
 
-        <!-- Options dropdown -->
+        <!-- Options list -->
         <div
             v-show="isOpen && !disabled"
             ref="optionsContainer"
@@ -49,6 +55,7 @@
                 role="listbox"
                 tabindex="0"
                 :aria-description="ariaLang.listDescription"
+                :aria-multiselectable="multiple"
                 :id="optionsId"
             >
                 <li
@@ -76,9 +83,19 @@
 
             <p
                 v-else
+                aria-live="polite"
             >
                 No options found.
             </p>
+        </div>
+
+        <!-- Assistive feedback for selected options -->
+        <div
+            aria-live="polite"
+            class="select-sr-only"
+            :id="`${id}_selected`"
+        >
+            {{ selectedOptionsMessage }}
         </div>
     </div>
 </template>
@@ -125,6 +142,10 @@ export default {
             default: true,
             type: Boolean,
         },
+        wide: {
+            default: false,
+            type: Boolean
+        },
         value: {
             type: [String, Number, Array],
             default: null,
@@ -143,6 +164,10 @@ export default {
     },
 
     computed: {
+        /**
+         * TODO
+         * @returns {*[]}
+         */
         filteredOptions() {
             if (!this.search) return this.options; // If no search term, return all options.
 
@@ -151,10 +176,18 @@ export default {
             return this.options.filter((option) => option.text.toLowerCase().includes(searchTerm));
         },
 
+        /**
+         * TODO
+         * @returns {string}
+         */
         optionsId() {
             return `${this.id}_options`;
         },
 
+        /**
+         * TODO
+         * @returns {number|number}
+         */
         viewportMaxHeight() {
             const smBreakpoint = 640;
             return window.innerWidth < smBreakpoint
@@ -162,6 +195,10 @@ export default {
                 : 200; // Default: 200px maxHeight
         },
 
+        /**
+         * TODO
+         * @returns {*|string}
+         */
         displayedPlaceholder() {
             if (this.multiple && this.selectedValues?.length) {
                 if (this.selectedValues.length === this.options.length) return 'All options selected'
@@ -172,6 +209,10 @@ export default {
             return this.placeholder
         },
 
+        /**
+         * TODO
+         * @returns {{inputAria: string, clearSelection: string, listDescription: string}}
+         */
         ariaLang() {
             let inputAria = `Press Enter to open the list of options, and select ${this.multiple ? 'one or more options' : 'an option'}`;
             if (this.disabled) {
@@ -186,6 +227,23 @@ export default {
                 inputAria
             }
         },
+
+        /**
+         * TODO
+         * @returns {string}
+         */
+        selectedOptionsMessage() {
+            if (this.selectedValues.length === 0) {
+                return 'No options selected.';
+            }
+
+            const selectedText = this.options
+                .filter(option => this.selectedValues.includes(option.value))
+                .map(option => option.text)
+                .join(', ');
+
+            return `Selected options: ${selectedText}`;
+        }
     },
 
     watch: {
@@ -193,8 +251,8 @@ export default {
             immediate: true,
             handler(newValue) {
                 this.setInitialSelected(newValue);
-            },
-        },
+            }
+        }
     },
 
     methods: {
@@ -424,9 +482,12 @@ export default {
         }
     },
 
+    /**
+     * Clean up event listeners.
+     */
     beforeDestroy() {
-        this.cleanupPositioning();
-        document.removeEventListener('mousedown', this.handleClickOutside); // Cleanup listener
+        this.cleanupPositioning()
+        document.removeEventListener('mousedown', this.handleClickOutside)
     },
 };
 </script>
@@ -434,7 +495,7 @@ export default {
 <!-- todo might not need to be scoped -->
 <style scoped>
 .select-container {
-    font-size: 16px; /* reset to base font sizes. */
+    font-size: 16px; /* reset */
     position: relative;
 }
 
@@ -445,12 +506,9 @@ export default {
     box-sizing: border-box;
     display: flex;
     height: 40px;
+    max-width: 100%;
     overflow: hidden;
     width: 100%;
-}
-
-.select-input-container:focus-within {
-    outline: 1px solid;
 }
 
 .select-input-container--disabled {
@@ -460,7 +518,7 @@ export default {
 }
 
 .select-input-input {
-    all: unset;
+    all: unset; /* reset */
 
     box-sizing: border-box;
     display: block;
@@ -470,8 +528,12 @@ export default {
     width: 100%;
 }
 
+.select-input-input:placeholder-shown {
+    text-overflow: ellipsis;
+}
+
 .select-input-clear {
-    all: unset;
+    all: unset; /* reset */
 
     align-items: center;
     background: transparent;
@@ -486,9 +548,6 @@ export default {
 .select-input-clear:hover,
 .select-input-clear:focus {
     background: #eee;
-}
-.select-input-clear:focus {
-    outline: 1px solid;
 }
 
 .select-options-container {
@@ -510,24 +569,51 @@ export default {
 
 .select-options-item {
     background-color: #ccc;
-    padding: 0.5rem 1rem;
     cursor: pointer;
     display: flex;
+    gap: 8px;
     justify-content: space-between;
+    padding: 0.5rem 1rem;
 }
 
-.select-options-item:hover {
-    background-color: #999;
+.select-options-item:hover,
+.select-options-item:focus {
+    background-color: #e6f7ff;
 }
 
 .select-options-item[aria-disabled="true"] {
     background-color: #999;
     color: #666;
-    pointer-events: none;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
-@media (min-width: 640px) {}
+.select-sr-only {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
 
-@media (min-width: 1024px) {}
+.select-input-container:focus-within,
+.select-input-clear:focus,
+.select-options-item:hover,
+.select-options-item:focus {
+    outline: 1px solid;
+}
+
+@media (min-width: 640px) {
+    .select-input-container {
+        width: 224px;
+    }
+
+    .select-input-container--wide {
+        width: 100%;
+    }
+}
 </style>
