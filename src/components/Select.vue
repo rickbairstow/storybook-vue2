@@ -27,7 +27,7 @@
                 :readonly="!searchable || disabled"
                 @keydown.enter="openOptions(true)"
                 @keydown.down="openOptions(true)"
-                @keydown.space.prevent="!searchable && openOptions(true)"
+                @keydown.space="searchable || openOptions(true)"
                 @click="searchable ? openOptions() : toggleOptions()"
             />
 
@@ -248,7 +248,7 @@ export default {
 
             const searchTerm = this.search.trim().toLowerCase();
 
-            const filtered = this.options.map(item => {
+            return this.options.map(item => {
                 if (item.group) {
                     const filteredGroupOptions = item.options.filter(option =>
                         option.text.toLowerCase().includes(searchTerm)
@@ -261,8 +261,6 @@ export default {
                 }
                 return null;
             }).filter(Boolean);
-
-            return filtered;
         },
 
         /**
@@ -575,21 +573,6 @@ export default {
             if (this.loadingMore) return; // Prevent multiple requests
             this.loadingMore = true; // Start loading state
             this.$emit('load-more-options');
-        },
-
-        /**
-         * Focus the last option or "Load More" button after options are loaded
-         */
-        focusLastLoadedOption() {
-            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
-            const lastOption = options[options.length - 1];
-            const loadMoreButton = this.$refs.loadMoreButton;
-
-            if (lastOption) {
-                lastOption.focus(); // Focus the last newly loaded option
-            } else if (loadMoreButton) {
-                loadMoreButton.focus(); // Fallback to focusing the "Load More" button
-            }
         }
     },
 
