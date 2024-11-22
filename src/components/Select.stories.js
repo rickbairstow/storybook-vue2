@@ -13,7 +13,7 @@ const groupedOptions = [
     {
         group: 'Group 1',
         options: Array.from({ length: 5 }, (_, i) => ({
-            value: i + 1,
+            value: `group_option_${i + 1}`,
             text: `Option ${i + 1}`,
             disabled: Math.random() > 0.9, // Randomly disable options
         })),
@@ -21,7 +21,7 @@ const groupedOptions = [
     {
         group: 'Group 2',
         options: Array.from({ length: 5 }, (_, i) => ({
-            value: i + 6,
+            value: `group_option_${i + 1}`,
             text: `Option ${i + 6}`,
             disabled: Math.random() > 0.9, // Randomly disable options
         })),
@@ -41,28 +41,16 @@ export default {
         },
         value: { control: { type: 'text' } }, // Storybook doesn't have the ability to set dynamic type.
     },
-    args: {
-        clearable: true,
-        disabled: false,
-        id: 'test',
-        hasMoreOptions: false,
-        multiple: true,
-        placeholder: 'Select an option, or type to search',
-        // options: options,
-        options: groupedOptions,
-        searchable: true,
-        wide: false,
-        value: null, // Default v-model value is null
-    },
 };
 
+// Template for all stories
 const Template = (args, { argTypes }) => ({
     components: { Select },
     props: Object.keys(argTypes), // Dynamically map all args to props
     data() {
         return {
             localValue: args.value, // Local v-model binding
-            localOptions: args.options // Local options to let me pass down extra options for load more
+            localOptions: args.options, // Local options for load more
         };
     },
     watch: {
@@ -80,17 +68,17 @@ const Template = (args, { argTypes }) => ({
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             if (args.options?.[0]?.group) {
-                // Push grouped options
+                // Add grouped options
                 this.localOptions.push({
                     group: `Group ${Math.floor(Math.random() * 1000)}`,
                     options: Array.from({ length: 5 }, (_, i) => ({
-                        value: i + 1,
-                        text: `Option ${Math.floor(Math.random() * 1000)}`,
+                        value: `group_option_${Math.floor(Math.random() * 1000)}`,
+                        text: `Option ${i + 1}`,
                         disabled: Math.random() > 0.9,
                     }))
                 });
             } else {
-                // Push single options
+                // Add single options
                 for (let i = 0; i < 5; i++) {
                     this.localOptions.push({
                         value: Math.floor(Math.random() * 1000),
@@ -99,7 +87,6 @@ const Template = (args, { argTypes }) => ({
                     });
                 }
             }
-
         },
     },
     template: `
@@ -111,9 +98,37 @@ const Template = (args, { argTypes }) => ({
                 @input="updateValue"
                 @load-more-options="addMoreOptions()"
             />
-            <p>Selected Value: {{ localValue }}</p> <!-- Display selected value -->
+            <p>Selected Value: {{ localValue }}</p>
         </div>
     `,
 });
 
-export const SelectTest = Template.bind({});
+// Default single-select story
+export const SingleSelect = Template.bind({});
+SingleSelect.args = {
+    clearable: true,
+    disabled: false,
+    id: 'single-select',
+    hasMoreOptions: false,
+    multiple: false,
+    placeholder: 'Select an option',
+    options: options,
+    searchable: true,
+    wide: false,
+    value: null,
+};
+
+// Grouped multi-select story
+export const GroupedMultiSelect = Template.bind({});
+GroupedMultiSelect.args = {
+    clearable: true,
+    disabled: false,
+    id: 'grouped-multi-select',
+    hasMoreOptions: false,
+    multiple: true,
+    placeholder: 'Select multiple options',
+    options: groupedOptions,
+    searchable: true,
+    wide: true,
+    value: null,
+};
