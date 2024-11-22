@@ -13,7 +13,7 @@ const groupedOptions = [
     {
         group: 'Group 1',
         options: Array.from({ length: 5 }, (_, i) => ({
-            value: `group_option_${i + 1}`,
+            value: `group_1_option_${i + 1}`,
             text: `Option ${i + 1}`,
             disabled: Math.random() > 0.9, // Randomly disable options
         })),
@@ -21,7 +21,7 @@ const groupedOptions = [
     {
         group: 'Group 2',
         options: Array.from({ length: 5 }, (_, i) => ({
-            value: `group_option_${i + 1}`,
+            value: `group_2_option_${i + 1}`,
             text: `Option ${i + 6}`,
             disabled: Math.random() > 0.9, // Randomly disable options
         })),
