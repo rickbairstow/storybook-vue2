@@ -52,7 +52,7 @@
                 :id="optionsId"
             >
                 <li
-                    v-for="(option, index) in filteredOptions"
+                    v-for="option in filteredOptions"
                     class="select-options-item"
                     role="option"
                     tabindex="0"
@@ -350,17 +350,11 @@ export default {
          * @param event
          */
         handleKeyDown(event) {
-            if (!this.isOpen) return
+            if (!this.isOpen) return;
 
-            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
-            const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true')
-            const focusedIndex = enabledOptions.indexOf(document.activeElement)
-
-            // This prevents native tab behaviour within the open options, as we use arrow keys instead.
-            if (event.key === 'tab') {
-                this.closeOptions()
-                return
-            }
+            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
+            const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true');
+            const focusedIndex = enabledOptions.indexOf(document.activeElement);
 
             if (event.key === 'ArrowDown') {
                 event.preventDefault(); // Prevent page scrolling
@@ -368,7 +362,7 @@ export default {
                 // Focus the next enabled option
                 const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % enabledOptions.length;
                 enabledOptions[nextIndex]?.focus();
-                return
+                return;
             }
 
             if (event.key === 'ArrowUp') {
@@ -377,7 +371,7 @@ export default {
                 // Focus the previous enabled option
                 const prevIndex = focusedIndex === -1 ? enabledOptions.length - 1 : (focusedIndex - 1 + enabledOptions.length) % enabledOptions.length;
                 enabledOptions[prevIndex]?.focus();
-                return
+                return;
             }
 
             // Handle selection only if focused on an option
@@ -389,6 +383,12 @@ export default {
                     const option = this.filteredOptions[options.indexOf(document.activeElement)];
                     this.setSelected(option);
                 }
+                return;
+            }
+
+            // Allow native Tab behavior to exit the options dropdown
+            if (event.key === 'Tab') {
+                this.closeOptions();
             }
         },
 
