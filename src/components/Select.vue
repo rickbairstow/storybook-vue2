@@ -11,11 +11,11 @@
         >
             <input
                 v-model="search"
-                aria-label="Select an option"
                 autocomplete="off"
                 class="select-input-input"
                 type="text"
                 :aria-controls="optionsId"
+                :aria-label="ariaLang.inputAria"
                 :id="id"
                 :placeholder="search ? '' : displayedPlaceholder"
                 :readonly="!searchable || disabled"
@@ -27,9 +27,9 @@
 
             <button
                 v-if="clearable && this.selectedValues.length && !disabled"
-                aria-label="Clear selection"
                 class="select-input-clear"
                 type="button"
+                :aria-label="ariaLang.clearSelection"
                 @click="clearSelection"
             >
                 X
@@ -45,11 +45,10 @@
         >
             <ul
                 v-if="filteredOptions.length > 0"
-                aria-description="Use the arrow keys to navigate options, press enter to select an option"
-                aria-label="Options list"
                 class="select-options-list"
                 role="listbox"
                 tabindex="0"
+                :aria-description="ariaLang.listDescription"
                 :id="optionsId"
             >
                 <li
@@ -100,10 +99,6 @@ export default {
         id: {
             required: true,
             type: String,
-        },
-        inputAria: {
-            type: String,
-            default: 'Select an option',
         },
         multiple: {
             type: Boolean,
@@ -175,7 +170,22 @@ export default {
             }
             if (this.selectedValues.length) return this.options.find((o) => o.value === this.selectedValues[0])?.text
             return this.placeholder
-        }
+        },
+
+        ariaLang() {
+            let inputAria = `Press Enter to open the list of options, and select ${this.multiple ? 'one or more options' : 'an option'}`;
+            if (this.disabled) {
+                inputAria = 'Select is disabled';
+            } else if (this.searchable) {
+                inputAria = `Type to search and select ${this.multiple ? 'one or more options' : 'an option'}`;
+            }
+
+            return {
+                clearSelection: 'Clear selection',
+                listDescription: `Use the arrow keys to navigate options, to select ${this.multiple ? 'one or more options' : 'an option'} press the space or enter key.`,
+                inputAria
+            }
+        },
     },
 
     watch: {
