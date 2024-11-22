@@ -43,6 +43,7 @@
         </div>
 
         <!-- Options list -->
+        <!-- Options list -->
         <div
             v-show="isOpen && !disabled"
             ref="optionsContainer"
@@ -53,60 +54,64 @@
         >
             <template v-if="filteredOptions.length > 0">
                 <template v-for="(item, index) in filteredOptions">
-                    <div
-                        v-if="item.group"
-                        :key="`select_group_${index}`"
-                        class="select-options-group-header"
-                        role="presentation"
-                        :aria-label="`Group: ${item.group}`"
-                    >
-                        {{ item.group }}
-                    </div>
-
                     <!-- Grouped options -->
-                    <ul
-                        v-if="item.group"
-                        class="select-options-list"
-                        :key="`group-options-${item.group}`"
-                        role="group"
-                        :aria-labelledby="`select_group_${index}`"
-                    >
-                        <li
-                            v-for="option in item.options"
-                            class="select-options-item"
-                            role="option"
-                            tabindex="0"
-                            :aria-disabled="option.disabled"
-                            :aria-label="option.text"
-                            :aria-selected="isOptionSelected(option.value) ? 'true' : 'false'"
-                            :key="option.value"
-                            @click="setSelected(option)"
+                    <template v-if="item.group">
+                        <div
+                            :key="`select_group_${index}`"
+                            class="select-options-group-header"
+                            role="presentation"
+                            :aria-label="`Group: ${item.group}`"
                         >
-                            {{ option.text }}
+                            {{ item.group }}
+                        </div>
 
-                            <div
-                                class="select-options-item--check"
-                                aria-hidden="true"
+                        <ul
+                            class="select-options-list"
+                            :key="`group-options-${item.group}`"
+                            role="group"
+                            :aria-labelledby="`select_group_${index}`"
+                        >
+                            <li
+                                v-for="option in item.options"
+                                class="select-options-item"
+                                role="option"
+                                tabindex="0"
+                                :aria-disabled="option.disabled"
+                                :aria-label="option.text"
+                                :aria-selected="isOptionSelected(option.value) ? 'true' : 'false'"
+                                :key="option.value"
+                                @click="setSelected(option)"
                             >
-                                TICK
-                            </div>
-                        </li>
-                    </ul>
+                                {{ option.text }}
+                                <div
+                                    class="select-options-item--check"
+                                    aria-hidden="true"
+                                >
+                                    TICK
+                                </div>
+                            </li>
+                        </ul>
+                    </template>
+                </template>
 
-                    <!-- Ungrouped options -->
+                <!-- Ungrouped options -->
+                <ul
+                    v-if="filteredOptions.some(item => !item.group)"
+                    class="select-options-list"
+                    :key="'ungrouped-options'"
+                >
                     <li
-                        v-else
+                        v-for="(item, index) in filteredOptions.filter(option => !option.group)"
                         class="select-options-item"
                         role="option"
                         tabindex="0"
                         :aria-disabled="item.disabled"
                         :aria-label="item.text"
                         :aria-selected="isOptionSelected(item.value) ? 'true' : 'false'"
-                        :key="item.value"
+                        :key="item.value || `option-${index}`"
                         @click="setSelected(item)"
                     >
                         {{ item.text }}
-
                         <div
                             class="select-options-item--check"
                             aria-hidden="true"
@@ -114,7 +119,7 @@
                             TICK
                         </div>
                     </li>
-                </template>
+                </ul>
             </template>
 
             <!-- No options feedback -->
@@ -142,6 +147,7 @@
 
         <!-- Assistive feedback for selected options -->
         <div
+            v-if="!disabled"
             aria-live="polite"
             class="select-sr-only"
             :id="`${id}_selected_values`"
@@ -330,7 +336,8 @@ export default {
          */
         ariaLang() {
             const controls = `Use the arrow keys to navigate, and press Enter or Space to select ${this.multiple ? 'one or more options' : 'an option'}.`;
-            const instructions = `Press Enter to open the list of options. ${this.searchable ? 'Type to search, ' : ''}${controls}`;
+            const searchHelp = this.searchable ? 'Type to search, ' : '';
+            const instructions = `Press Enter to open the list of options. ${searchHelp}${controls}`;
 
             const selectedText = this.selectedText ? `${this.selectedText}.` : '';
             const inputLabel = this.disabled
@@ -341,7 +348,7 @@ export default {
                 clearSelection: 'Clear selection',
                 listDescription: controls,
                 inputLabel,
-                instructions,
+                instructions: this.disabled ? '' : instructions, // Only include instructions if not disabled
             };
         },
 
