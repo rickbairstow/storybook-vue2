@@ -83,6 +83,13 @@
                             @click="setSelected(option)"
                         >
                             {{ option.text }}
+
+                            <div
+                                class="select-options-item--check"
+                                aria-hidden="true"
+                            >
+                                TICK
+                            </div>
                         </li>
                     </ul>
 
@@ -99,6 +106,13 @@
                         @click="setSelected(item)"
                     >
                         {{ item.text }}
+
+                        <div
+                            class="select-options-item--check"
+                            aria-hidden="true"
+                        >
+                            TICK
+                        </div>
                     </li>
                 </template>
             </template>
@@ -359,7 +373,7 @@ export default {
          * @returns {boolean}
          */
         isOptionSelected(value) {
-            return this.selectedValues.includes(value);
+            return this.selectedValues?.includes(value);
         },
 
         /**
@@ -742,6 +756,14 @@ export default {
 .select-options-item:hover,
 .select-options-item:focus {
     background-color: #ccc;
+}
+
+.select-options-item--check {
+    display: none;
+}
+
+.select-options-item[aria-selected="true"] .select-options-item--check {
+    display: block;
 }
 
 .select-options-load-more {
