@@ -144,9 +144,17 @@
         <div
             aria-live="polite"
             class="select-sr-only"
-            :id="`${id}_selected`"
+            :id="`${id}_selected_values`"
         >
             {{ selectedOptionsMessage }}
+        </div>
+
+        <!-- Assistive feedback for instructions -->
+        <div
+            id="id_instructions"
+            class="select-sr-only"
+        >
+            {{ ariaLang.inputAria }}
         </div>
     </div>
 </template>
@@ -313,18 +321,21 @@ export default {
          * @returns {{inputAria: string, clearSelection: string, listDescription: string}}
          */
         ariaLang() {
-            let inputAria = `Press Enter to open the list of options, and select ${this.multiple ? 'one or more options' : 'an option'}`;
-            if (this.disabled) {
-                inputAria = 'Select is disabled';
-            } else if (this.searchable) {
-                inputAria = `Type to search and select ${this.multiple ? 'one or more options' : 'an option'}`;
-            }
+            const controls = `Use the arrow keys to navigate options, to select ${this.multiple ? 'one or more options' : 'an option'} press the space or enter key.`;
+
+            const inputAria = this.disabled
+                ? 'Select is disabled'
+                : `Press Enter to open the list of options. ${
+                    this.searchable
+                        ? `Type to search and select ${this.multiple ? 'one or more options' : 'an option'}. `
+                        : ''
+                }${controls}`;
 
             return {
                 clearSelection: 'Clear selection',
-                listDescription: `Use the arrow keys to navigate options, to select ${this.multiple ? 'one or more options' : 'an option'} press the space or enter key.`,
+                listDescription: controls,
                 inputAria
-            }
+            };
         },
 
         /**
