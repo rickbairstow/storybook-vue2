@@ -50,7 +50,7 @@
             class="select-options-container"
             role="listbox"
             :id="optionsId"
-            :style="{ ...floatingStyles, maxHeight: initialMaxHeight }"
+            :style="{ ...floatingStyles, maxHeight: `${initialMaxHeight}px` }"
         >
             <template v-if="filteredOptions.length > 0">
                 <template v-for="(item, index) in filteredOptions">
@@ -166,7 +166,7 @@
 </template>
 
 <script>
-import { computePosition, autoUpdate, offset, flip, shift, size } from '@floating-ui/dom';
+import { computePosition, autoUpdate, offset, flip, shift, size } from '@floating-ui/dom'
 
 export default {
     props: {
@@ -200,20 +200,20 @@ export default {
                     if (item.group) {
                         return typeof item.group === 'string' &&
                             Array.isArray(item.options) &&
-                            item.options.every(option => option?.text && option?.value);
+                            item.options.every(option => option?.text && option?.value)
                     }
                     // If the item is not a group, it must have "text" and "value"
-                    return item?.text && item?.value;
-                });
+                    return item?.text && item?.value
+                })
 
                 if (!isValid) {
                     throw new Error(
                         'Invalid options: Each item must be an option with "text" and "value", or a group with "label" and "options".\n' +
                         JSON.stringify(value, null, 2)
-                    );
+                    )
                 }
 
-                return isValid;
+                return isValid
             }
         },
         placeholder: {
@@ -238,17 +238,17 @@ export default {
         return {
             cleanupAutoUpdate: null,
             currentOptionsLength: 0,
-            floatingStyles: {}, // Stores computed styles
-            initialMaxHeight: '0px', // Ensures no "auto" height initially
+            floatingStyles: {},
+            initialMaxHeight: 0,
             isOpen: false,
             loadingMore: false,
-            search: '', // Tracks the user's search input
-            selectedValues: [], // Stores currently selected values
-        };
+            search: '',
+            selectedValues: [],
+        }
     },
 
     mounted() {
-        // TODO - Set current length, this helps us set focus when loading more options.
+        // Sets the initial length, which helps us set focus when loading more options.
         this.currentOptionsLength = this.options?.length
     },
 
@@ -258,23 +258,23 @@ export default {
          * @returns {*[]}
          */
         filteredOptions() {
-            if (!this.search) return this.options;
+            if (!this.search) return this.options
 
-            const searchTerm = this.search.trim().toLowerCase();
+            const searchTerm = this.search.trim().toLowerCase()
 
             return this.options.map(item => {
                 if (item.group) {
                     const filteredGroupOptions = item.options.filter(option =>
                         option.text.toLowerCase().includes(searchTerm)
-                    );
+                    )
                     return filteredGroupOptions.length
                         ? { group: item.group, options: filteredGroupOptions }
-                        : null;
+                        : null
                 } else if (item.text.toLowerCase().includes(searchTerm)) {
-                    return item;
+                    return item
                 }
-                return null;
-            }).filter(Boolean);
+                return null
+            }).filter(Boolean)
         },
 
         /**
@@ -282,7 +282,7 @@ export default {
          * @returns {string}
          */
         optionsId() {
-            return `${this.id}_options`;
+            return `${this.id}_options`
         },
 
         /**
@@ -290,10 +290,10 @@ export default {
          * @returns {number|number}
          */
         viewportMaxHeight() {
-            const smBreakpoint = 640;
+            const smBreakpoint = 640
             return window.innerWidth < smBreakpoint
                 ? window.innerHeight // Mobile: Use viewport height
-                : 200; // Default: 200px maxHeight
+                : 200 // Default: 200px maxHeight
         },
 
         /**
@@ -301,7 +301,7 @@ export default {
          * @returns {*|string}
          */
         displayedPlaceholder() {
-            return this.selectedText || this.placeholder;
+            return this.selectedText || this.placeholder
         },
 
         /**
@@ -311,21 +311,21 @@ export default {
         selectedText() {
             if (this.multiple && this.selectedValues?.length) {
                 if (this.selectedValues.length === this.options.flatMap(o => (o.group ? o.options : o)).length) {
-                    return 'All options selected';
+                    return 'All options selected'
                 }
                 if (this.selectedValues.length > 1) {
-                    return `${this.selectedValues.length} options selected`;
+                    return `${this.selectedValues.length} options selected`
                 }
                 const selectedOption = this.options
                     .flatMap(o => (o.group ? o.options : o))
-                    .find(option => option.value === this.selectedValues[0]);
-                return selectedOption ? selectedOption.text : this.placeholder;
+                    .find(option => option.value === this.selectedValues[0])
+                return selectedOption ? selectedOption.text : this.placeholder
             }
             if (this.selectedValues.length) {
                 const selectedOption = this.options
                     .flatMap(o => (o.group ? o.options : o))
-                    .find(option => option.value === this.selectedValues[0]);
-                return selectedOption ? selectedOption.text : this.placeholder;
+                    .find(option => option.value === this.selectedValues[0])
+                return selectedOption ? selectedOption.text : this.placeholder
             }
             return null
         },
@@ -335,21 +335,21 @@ export default {
          * @returns {{inputAria: string, clearSelection: string, listDescription: string}}
          */
         ariaLang() {
-            const controls = `Use the arrow keys to navigate, and press Enter or Space to select ${this.multiple ? 'one or more options' : 'an option'}.`;
-            const searchHelp = this.searchable ? 'Type to search, ' : '';
-            const instructions = `Press Enter to open the list of options. ${searchHelp}${controls}`;
+            const controls = `Use the arrow keys to navigate, and press Enter or Space to select ${this.multiple ? 'one or more options' : 'an option'}.`
+            const searchHelp = this.searchable ? 'Type to search, ' : ''
+            const instructions = `Press Enter to open the list of options. ${searchHelp}${controls}`
 
-            const selectedText = this.selectedText ? `${this.selectedText}.` : '';
+            const selectedText = this.selectedText ? `${this.selectedText}.` : ''
             const inputLabel = this.disabled
                 ? `${selectedText} Select is disabled.`
-                : `${selectedText} ${instructions}`;
+                : `${selectedText} ${instructions}`
 
             return {
                 clearSelection: 'Clear selection',
                 listDescription: controls,
                 inputLabel,
                 instructions: this.disabled ? '' : instructions, // Only include instructions if not disabled
-            };
+            }
         },
 
         /**
@@ -358,15 +358,15 @@ export default {
          */
         selectedOptionsMessage() {
             if (this.selectedValues.length === 0) {
-                return 'No options selected.';
+                return 'No options selected.'
             }
 
             const selectedText = this.options
                 .filter(option => this.selectedValues.includes(option.value))
                 .map(option => option.text)
-                .join(', ');
+                .join(', ')
 
-            return `Selected options: ${selectedText}`;
+            return `Selected options: ${selectedText}`
         }
     },
 
@@ -376,18 +376,18 @@ export default {
          * @param newValue
          */
         setInitialSelected(newValue) {
-            const values = Array.isArray(newValue) ? newValue : [newValue];
+            const values = Array.isArray(newValue) ? newValue : [newValue]
 
             // Flatten grouped options to simplify value matching
             const flattenedOptions = this.options.flatMap(option =>
                 option.group ? option.options : option
-            );
+            )
 
             // Filter and map unique values
             this.selectedValues = [...new Set(flattenedOptions
                 .filter(option => values.includes(option.value) && !option.disabled)
                 .map(option => option.value)
-            )];
+            )]
         },
 
         /**
@@ -396,7 +396,7 @@ export default {
          * @returns {boolean}
          */
         isOptionSelected(value) {
-            return !!this.selectedValues?.includes(value);
+            return !!this.selectedValues?.includes(value)
         },
 
         /**
@@ -404,24 +404,24 @@ export default {
          * @param option
          */
         setSelected(option) {
-            if (option.disabled) return;
+            if (option.disabled) return
 
-            const newValue = option.value;
+            const newValue = option.value
 
             if (this.multiple) {
                 // Toggle selection for multiple mode
                 if (this.selectedValues.includes(newValue)) {
-                    this.selectedValues = this.selectedValues.filter(val => val !== newValue);
+                    this.selectedValues = this.selectedValues.filter(val => val !== newValue)
                 } else {
-                    this.selectedValues = [...this.selectedValues, newValue];
+                    this.selectedValues = [...this.selectedValues, newValue]
                 }
             } else {
                 // Single selection mode
-                this.selectedValues = [newValue];
-                this.closeOptions(true);
+                this.selectedValues = [newValue]
+                this.closeOptions(true)
             }
 
-            this.$emit('input', this.multiple ? this.selectedValues : newValue); // Emit updated values
+            this.$emit('input', this.multiple ? this.selectedValues : newValue) // Emit updated values
         },
 
         /**
@@ -430,44 +430,44 @@ export default {
          * @returns {Promise<void>}
          */
         async openOptions(focus = false) {
-            if (this.isOpen || this.disabled) return;
-            this.isOpen = true;
+            if (this.isOpen || this.disabled) return
+            this.isOpen = true
 
-            this.initialMaxHeight = `${this.viewportMaxHeight}px`;
-            this.initAutoPositioning();
+            this.initialMaxHeight = this.viewportMaxHeight
+            this.initAutoPositioning()
 
             // Focus on the first available option when opening via keyboard controls.
             if (focus) {
                 // We need to wait for options to exist in the DOM before focusing, nextTick doesn't work for this so we use requestAnimationFrame.
-                await new Promise((resolve) => requestAnimationFrame(resolve));
+                await new Promise((resolve) => requestAnimationFrame(resolve))
 
-                const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
+                const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
                 for (const option of options) {
                     if (option.getAttribute('aria-disabled') !== 'true') {
-                        option.focus(); // Focus the first enabled option
-                        break;
+                        option.focus() // Focus the first enabled option
+                        break
                     }
                 }
             }
 
-            document.addEventListener('keydown', this.handleKeyDown); // Add keyboard listener
-            document.addEventListener('mousedown', this.handleClickOutside); // Listen for outside clicks
+            document.addEventListener('keydown', this.handleKeyDown) // Add keyboard listener
+            document.addEventListener('mousedown', this.handleClickOutside) // Listen for outside clicks
         },
 
         /**
          * TODO
          */
         closeOptions(focus = false) {
-            if (!this.isOpen || this.disabled) return;
-            this.isOpen = false;
+            if (!this.isOpen || this.disabled) return
+            this.isOpen = false
 
             if (focus) this.focusInput()
 
-            this.cleanupPositioning();
-            this.search = ''; // Clear search on close
-            this.initialMaxHeight = '0px';
-            document.removeEventListener('keydown', this.handleKeyDown); // Remove keyboard listener
-            document.removeEventListener('mousedown', this.handleClickOutside); // Remove listener
+            this.cleanupPositioning()
+            this.search = ''
+            this.initialMaxHeight = 0
+            document.removeEventListener('keydown', this.handleKeyDown)
+            document.removeEventListener('mousedown', this.handleClickOutside)
         },
 
         /**
@@ -484,9 +484,9 @@ export default {
          * @param event
          */
         handleClickOutside(event) {
-            const container = this.$el;
+            const container = this.$el
             if (!container.contains(event.target)) {
-                this.closeOptions(); // Close if the click is outside
+                this.closeOptions() // Close if the click is outside
             }
         },
 
@@ -494,8 +494,8 @@ export default {
          * TODO
          */
         initAutoPositioning() {
-            const inputContainer = this.$refs.inputContainer;
-            const optionsContainer = this.$refs.optionsContainer;
+            const inputContainer = this.$refs.inputContainer
+            const optionsContainer = this.$refs.optionsContainer
 
             if (!inputContainer || !optionsContainer) return
 
@@ -508,12 +508,12 @@ export default {
                         shift(),
                         size({
                             apply: ({ availableHeight, elements }) => {
-                                const maxHeight = Math.min(availableHeight, this.viewportMaxHeight);
+                                const maxHeight = Math.min(availableHeight, this.viewportMaxHeight)
                                 Object.assign(elements.floating.style, {
                                     maxHeight: `${maxHeight}px`,
                                     overflowY: 'auto',
                                     width: '100%',
-                                });
+                                })
                             },
                         }),
                     ],
@@ -522,9 +522,9 @@ export default {
                         position: 'absolute',
                         top: `${y}px`,
                         left: `${x}px`,
-                    };
-                });
-            });
+                    }
+                })
+            })
         },
 
         /**
@@ -532,8 +532,8 @@ export default {
          */
         cleanupPositioning() {
             if (this.cleanupAutoUpdate) {
-                this.cleanupAutoUpdate();
-                this.cleanupAutoUpdate = null;
+                this.cleanupAutoUpdate()
+                this.cleanupAutoUpdate = null
             }
         },
 
@@ -542,53 +542,53 @@ export default {
          * @param event
          */
         handleKeyDown(event) {
-            if (!this.isOpen) return;
+            if (!this.isOpen) return
 
             const flatFilteredOptions = this.filteredOptions.flatMap(option =>
                 option.group ? option.options : option
-            );
-            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'));
-            const loadMoreButton = this.$refs.loadMoreButton;
-            const navigableElements = [...options, loadMoreButton].filter(Boolean); // Include the Load More button
+            )
+            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
+            const loadMoreButton = this.$refs.loadMoreButton
+            const navigableElements = [...options, loadMoreButton].filter(Boolean) // Include the Load More button
 
-            const focusedIndex = navigableElements.indexOf(document.activeElement);
+            const focusedIndex = navigableElements.indexOf(document.activeElement)
 
             if (event.key === 'ArrowDown') {
-                event.preventDefault(); // Prevent page scrolling
+                event.preventDefault() // Prevent page scrolling
 
                 // Focus the next element
-                const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % navigableElements.length;
-                navigableElements[nextIndex]?.focus();
+                const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % navigableElements.length
+                navigableElements[nextIndex]?.focus()
             } else if (event.key === 'ArrowUp') {
-                event.preventDefault(); // Prevent page scrolling
+                event.preventDefault() // Prevent page scrolling
 
                 // Focus the previous element
-                const prevIndex = focusedIndex === -1 ? navigableElements.length - 1 : (focusedIndex - 1 + navigableElements.length) % navigableElements.length;
-                navigableElements[prevIndex]?.focus();
+                const prevIndex = focusedIndex === -1 ? navigableElements.length - 1 : (focusedIndex - 1 + navigableElements.length) % navigableElements.length
+                navigableElements[prevIndex]?.focus()
             } else if (event.key === 'Enter' || (event.key === ' ' && document.activeElement !== this.$refs.inputContainer.querySelector('input'))) {
                 // Handle Enter or Space only when not focused on input
-                event.preventDefault();
+                event.preventDefault()
 
                 if (document.activeElement) {
-                    const isOption = document.activeElement.classList.contains('select-options-item');
-                    const isLoadMore = document.activeElement === loadMoreButton;
+                    const isOption = document.activeElement.classList.contains('select-options-item')
+                    const isLoadMore = document.activeElement === loadMoreButton
 
                     if (isOption) {
                         // Get the index of the active DOM element
-                        const optionIndex = options.indexOf(document.activeElement);
-                        const selectedOption = flatFilteredOptions[optionIndex];
+                        const optionIndex = options.indexOf(document.activeElement)
+                        const selectedOption = flatFilteredOptions[optionIndex]
 
                         if (selectedOption) {
-                            this.setSelected(selectedOption);
+                            this.setSelected(selectedOption)
                         }
                     } else if (isLoadMore) {
                         // Trigger "Load More"
-                        this.requestMoreOptions();
+                        this.requestMoreOptions()
                     }
                 }
             } else if (event.key === 'Tab') {
                 // Allow Tab to exit the dropdown
-                this.closeOptions();
+                this.closeOptions()
             }
         },
 
@@ -596,8 +596,8 @@ export default {
          * TODO
          */
         clearSelection() {
-            this.selectedValues = [];
-            this.$emit('input', this.multiple ? [] : null);
+            this.selectedValues = []
+            this.$emit('input', this.multiple ? [] : null)
 
             this.closeOptions()
             this.focusInput()
@@ -607,16 +607,16 @@ export default {
          * TODO
          */
         focusInput() {
-            this.$refs.inputContainer.querySelector('input').focus();
+            this.$refs.inputContainer.querySelector('input').focus()
         },
 
         /**
          * Todo - when we have more results we need to request them from the parent.
          */
         requestMoreOptions() {
-            if (this.loadingMore) return; // Prevent multiple requests
-            this.loadingMore = true; // Start loading state
-            this.$emit('load-more-options');
+            if (this.loadingMore) return // Prevent multiple requests
+            this.loadingMore = true // Start loading state
+            this.$emit('load-more-options')
         }
     },
 
@@ -633,7 +633,7 @@ export default {
         value: {
             immediate: true,
             handler(newValue) {
-                this.setInitialSelected(newValue);
+                this.setInitialSelected(newValue)
             }
         },
 
@@ -645,33 +645,33 @@ export default {
             immediate: true,
             handler(updatedOptions) {
                 if (this.loadingMore) {
-                    const optionsContainer = this.$refs.optionsContainer;
+                    const optionsContainer = this.$refs.optionsContainer
 
                     if (optionsContainer) {
                         // Handle grouped options
-                        const allGroups = Array.from(optionsContainer.querySelectorAll('[role="group"]'));
+                        const allGroups = Array.from(optionsContainer.querySelectorAll('[role="group"]'))
 
                         if (allGroups.length > 0) {
-                            const lastGroup = allGroups[allGroups.length - 1];
-                            const lastItem = lastGroup.querySelector('.select-options-item:last-child');
+                            const lastGroup = allGroups[allGroups.length - 1]
+                            const lastItem = lastGroup.querySelector('.select-options-item:last-child')
 
                             if (lastItem) {
-                                lastItem.focus(); // Focus the last item in the last group
+                                lastItem.focus() // Focus the last item in the last group
                             }
                         } else {
                             // Handle ungrouped options
-                            const allOptions = Array.from(optionsContainer.querySelectorAll('.select-options-item'));
+                            const allOptions = Array.from(optionsContainer.querySelectorAll('.select-options-item'))
 
                             if (allOptions.length > this.currentOptionsLength) {
-                                allOptions[this.currentOptionsLength]?.focus(); // Focus the first newly added option
+                                allOptions[this.currentOptionsLength]?.focus() // Focus the first newly added option
                             }
                         }
                     }
 
-                    this.currentOptionsLength = updatedOptions.length; // Update the length
-                    this.loadingMore = false; // Reset loading state
+                    this.currentOptionsLength = updatedOptions.length // Update the length
+                    this.loadingMore = false // Reset loading state
                 } else {
-                    this.currentOptionsLength = updatedOptions.length; // Regular update
+                    this.currentOptionsLength = updatedOptions.length // Regular update
                 }
             }
         }
@@ -684,8 +684,9 @@ export default {
         this.cleanupPositioning()
         document.removeEventListener('mousedown', this.handleClickOutside)
     },
-};
+}
 </script>
+
 
 <!-- todo might not need to be scoped -->
 <style scoped>
