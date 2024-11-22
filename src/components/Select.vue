@@ -230,10 +230,7 @@ export default {
          * @returns {*[]}
          */
         filteredOptions() {
-            if (!this.search) {
-                console.log('Filtered Options:', this.options);
-                return this.options;
-            }
+            if (!this.search) return this.options;
 
             const searchTerm = this.search.trim().toLowerCase();
 
@@ -251,7 +248,6 @@ export default {
                 return null;
             }).filter(Boolean);
 
-            console.log('Filtered Options:', filtered);
             return filtered;
         },
 
@@ -280,12 +276,24 @@ export default {
          */
         displayedPlaceholder() {
             if (this.multiple && this.selectedValues?.length) {
-                if (this.selectedValues.length === this.options.length) return 'All options selected'
-                if (this.selectedValues.length > 1) return `${this.selectedValues.length} options selected`
-                return this.options.find((o) => o.value === this.selectedValues[0])?.text
+                if (this.selectedValues.length === this.options.flatMap(o => (o.group ? o.options : o)).length) {
+                    return 'All options selected';
+                }
+                if (this.selectedValues.length > 1) {
+                    return `${this.selectedValues.length} options selected`;
+                }
+                const selectedOption = this.options
+                    .flatMap(o => (o.group ? o.options : o))
+                    .find(option => option.value === this.selectedValues[0]);
+                return selectedOption ? selectedOption.text : this.placeholder;
             }
-            if (this.selectedValues.length) return this.options.find((o) => o.value === this.selectedValues[0])?.text
-            return this.placeholder
+            if (this.selectedValues.length) {
+                const selectedOption = this.options
+                    .flatMap(o => (o.group ? o.options : o))
+                    .find(option => option.value === this.selectedValues[0]);
+                return selectedOption ? selectedOption.text : this.placeholder;
+            }
+            return this.placeholder;
         },
 
         /**
@@ -332,9 +340,17 @@ export default {
          */
         setInitialSelected(newValue) {
             const values = Array.isArray(newValue) ? newValue : [newValue];
-            this.selectedValues = this.options
-                .filter((option) => values.includes(option.value) && !option.disabled)
-                .map((option) => option.value);
+
+            // Flatten grouped options to simplify value matching
+            const flattenedOptions = this.options.flatMap(option =>
+                option.group ? option.options : option
+            );
+
+            // Filter and map unique values
+            this.selectedValues = [...new Set(flattenedOptions
+                .filter(option => values.includes(option.value) && !option.disabled)
+                .map(option => option.value)
+            )];
         },
 
         /**
@@ -358,7 +374,7 @@ export default {
             if (this.multiple) {
                 // Toggle selection for multiple mode
                 if (this.selectedValues.includes(newValue)) {
-                    this.selectedValues = this.selectedValues.filter((val) => val !== newValue);
+                    this.selectedValues = this.selectedValues.filter(val => val !== newValue);
                 } else {
                     this.selectedValues = [...this.selectedValues, newValue];
                 }
@@ -527,6 +543,7 @@ export default {
             this.selectedValues = [];
             this.$emit('input', this.multiple ? [] : null);
 
+            this.closeOptions()
             this.focusInput()
         },
 

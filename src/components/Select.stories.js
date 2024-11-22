@@ -46,13 +46,13 @@ export default {
         disabled: false,
         id: 'test',
         hasMoreOptions: false,
-        multiple: false,
+        multiple: true,
         placeholder: 'Select an option, or type to search',
         // options: options,
         options: groupedOptions,
         searchable: true,
         wide: false,
-        value: 1, // Default v-model value is null
+        value: null, // Default v-model value is null
     },
 };
 
