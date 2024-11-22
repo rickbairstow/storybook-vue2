@@ -7,6 +7,8 @@ const options = Array.from({ length: 50 }, (_, i) => ({
     disabled: Math.random() > 0.9, // Randomly disable options
 }))
 
+options.push({ value: 'something', text: 'Some really long option that should cause the input to be extremely long', disabled: false })
+
 export default {
     components: { Select },
     title: 'Select',
@@ -28,6 +30,7 @@ export default {
         placeholder: 'Select an option, or type to search',
         options: options,
         searchable: true,
+        wide: false,
         value: 1, // Default v-model value is null
     },
 };
