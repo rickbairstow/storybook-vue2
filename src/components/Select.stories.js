@@ -26,6 +26,7 @@ export default {
         clearable: true,
         disabled: false,
         id: 'test',
+        loading: false,
         multiple: false,
         placeholder: 'Select an option, or type to search',
         options: options,
