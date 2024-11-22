@@ -17,9 +17,10 @@
                 :aria-controls="optionsId"
                 :id="id"
                 :placeholder="search ? '' : displayedPlaceholder"
+                :readonly="!searchable"
                 @keydown.enter="openOptions(true)"
                 @keydown.down="openOptions(true)"
-                @click="openOptions()"
+                @click="searchable ? openOptions() : toggleOptions()"
             />
 
             <button
@@ -116,6 +117,10 @@ export default {
             type: String,
             default: 'Select an option.',
         },
+        searchable: {
+            default: true,
+            type: Boolean,
+        },
         value: {
             type: [String, Number, Array],
             default: null,
@@ -137,7 +142,7 @@ export default {
         filteredOptions() {
             if (!this.search) return this.options; // If no search term, return all options.
 
-            const searchTerm = this.search.toLowerCase();
+            const searchTerm = this.search.trim().toLowerCase();
 
             return this.options.filter((option) => option.text.toLowerCase().includes(searchTerm));
         },
@@ -266,6 +271,13 @@ export default {
         },
 
         /**
+         * TODO used specifically for when search is disabled, toggles when clicking the input.
+         */
+        toggleOptions() {
+            this.isOpen ? this.closeOptions() : this.openOptions()
+        },
+
+        /**
          * TODO
          * @param event
          */
@@ -337,7 +349,7 @@ export default {
             const enabledOptions = options.filter((option) => option.getAttribute('aria-disabled') !== 'true')
             const focusedIndex = enabledOptions.indexOf(document.activeElement)
 
-            // This prevents native tab behaviour within the open options, as e use arrow keys instead.
+            // This prevents native tab behaviour within the open options, as we use arrow keys instead.
             if (event.key === 'tab') {
                 this.closeOptions()
                 return
@@ -361,7 +373,8 @@ export default {
                 return
             }
 
-            if (event.key === 'Enter' || event.key === ' ') {
+            // Handle selection only if focused on an option
+            if ((event.key === 'Enter' || event.key === ' ') && options.includes(document.activeElement)) {
                 event.preventDefault();
 
                 // Select the currently focused option
