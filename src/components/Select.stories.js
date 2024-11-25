@@ -103,7 +103,7 @@ const Template = (args, { argTypes }) => ({
     },
     template: `
         <div>
-            <Select 
+            <Select
                 v-bind="$props" 
                 :value="localValue"
                 :options="localOptions"
