@@ -850,4 +850,22 @@ export default {
         width: 100%;
     }
 }
+
+/**
+ * Temporary... these are on the dashboard as default css classes.
+ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #C0C0C0;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #878787;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0);
+}
 </style>
