@@ -194,16 +194,20 @@ export default {
             type: Array,
             default: () => [],
             validator: (value) => {
-                // Checks that the data structure contains text and value keys, for both single and grouped options.
-                const isValid = !value || value.every(item => {
-                    if (item.group) {
-                        return typeof item.group === 'string' &&
+                // Custom validator to check that the data structure contains text and value keys, for both single and grouped options.
+                if (!value) return false
+
+                const isValid = value.every(item =>
+                    item.group ?
+                        (
+                            typeof item.group === 'string' &&
                             Array.isArray(item.options) &&
                             item.options.every(option => option?.text && option?.value)
-                    }
-                    return item?.text && item?.value
-                })
+                        ) :
+                        item?.text && item?.value
+                )
 
+                // Throw a custom error to give better context, instead of Vue's limited "invalid prop" error.
                 if (!isValid) {
                     throw new Error(
                         'Invalid options: Each item must be an option with "text" and "value", or a group with "label" and "options".\n' +
