@@ -619,37 +619,32 @@ export default {
             if (this.disabled) return
 
             this.isOpen ? this.closeOptions() : this.openOptions()
+        },
+
+        /**
+         * Abstracted logic to calculate what element we need to focus when loading more options.
+         * @returns {*|null}
+         */
+        calculateFocusTarget() {
+            const optionsContainer = this.$refs.optionsContainer
+            if (!optionsContainer) return null
+
+            const allOptions = Array.from(optionsContainer?.querySelectorAll('.select-options-item'))
+            return allOptions.length > 0 ? allOptions[allOptions.length - 1] : null
         }
     },
 
     watch: {
         /**
-         * TODO
-         * @param updatedOptions
+         * Handles external option updates, ie load more, managing focus, tracking option length, and resetting the loading state.
+         * @param {Array} updatedOptions
          */
         options: {
             immediate: true,
             handler(updatedOptions) {
                 if (this.loadingMore) {
-                    const optionsContainer = this.$refs.optionsContainer
-
-                    if (optionsContainer) {
-                        // Check if the options are grouped.
-                        const allGroups = Array.from(optionsContainer.querySelectorAll('[role="group"]'))
-
-                        if (allGroups.length > 0) {
-                            const lastGroup = allGroups[allGroups.length - 1]
-                            const lastItem = lastGroup.querySelector('.select-options-item:last-child')
-
-                            if (lastItem) lastItem.focus()
-                        } else {
-                            const allOptions = Array.from(optionsContainer.querySelectorAll('.select-options-item'))
-
-                            if (allOptions.length > this.currentOptionsLength) {
-                                allOptions[this.currentOptionsLength]?.focus()
-                            }
-                        }
-                    }
+                    const focusTarget = this.calculateFocusTarget()
+                    if (focusTarget) focusTarget?.focus()
 
                     this.currentOptionsLength = updatedOptions.length
                     this.loadingMore = false
