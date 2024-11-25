@@ -147,12 +147,12 @@
 
         <!-- Assistive feedback for selected options -->
         <div
-            v-if="!disabled"
+            v-if="!disabled && selectedAssistiveText"
             aria-live="polite"
             class="select-sr-only"
             :id="`${id}_selected_values`"
         >
-            {{ selectedOptionsMessage }}
+            {{ selectedAssistiveText }}
         </div>
 
         <!-- Assistive feedback for instructions -->
@@ -194,7 +194,7 @@ export default {
             type: Array,
             default: () => [],
             validator: (value) => {
-                // Checks that the data structure contains text and value keys, for both flat and grouped objects.
+                // Checks that the data structure contains text and value keys, for both single and grouped options.
                 const isValid = !value || value.every(item => {
                     if (item.group) {
                         return typeof item.group === 'string' &&
@@ -234,33 +234,38 @@ export default {
 
     data() {
         return {
-            cleanupAutoUpdate: null,
+            breakpoints: {
+                sm: 640
+            },
             currentOptionsLength: 0,
             floatingStyles: {},
             initialMaxHeight: 0,
             isOpen: false,
             loadingMore: false,
             search: '',
-            selectedValues: [],
+            selectedValues: []
         }
     },
 
     mounted() {
-        // Sets the initial length, which helps us set focus when loading more options.
+        // Sets the current options length, this helps us know when more options have been loaded from the parent.
         this.currentOptionsLength = this.options?.length
     },
 
     computed: {
         /**
-         * TODO
-         * @returns {*[]}
+         * Returns filtered options based upon the provided options and the user's search term. Covering both singular
+         * and grouped options.
+         * @returns {Array} - returns an array of options.
          */
         filteredOptions() {
+            if (!this.options) return []
             if (!this.search) return this.options
 
             const searchTerm = this.search.trim().toLowerCase()
 
-            return this.options.map(item => {
+            return this.options?.map(item => {
+                // Grouped
                 if (item.group) {
                     const filteredGroupOptions = item.options.filter(option =>
                         option.text.toLowerCase().includes(searchTerm)
@@ -268,15 +273,15 @@ export default {
                     return filteredGroupOptions.length
                         ? { group: item.group, options: filteredGroupOptions }
                         : null
-                } else if (item.text.toLowerCase().includes(searchTerm)) {
-                    return item
                 }
-                return null
-            }).filter(Boolean)
+
+                // Single
+                if (item.text.toLowerCase().includes(searchTerm)) return item
+            })?.filter(Boolean)
         },
 
         /**
-         * TODO
+         * Centralises the options ID for use in multiple places.
          * @returns {string}
          */
         optionsId() {
@@ -284,59 +289,52 @@ export default {
         },
 
         /**
-         * TODO
-         * @returns {number|number}
+         * Calculates the max viewport height for the dropdown, based upon the small breakpoint.
+         * @returns {number}
          */
         viewportMaxHeight() {
-            const smBreakpoint = 640
-            return window.innerWidth < smBreakpoint
+            return window.innerWidth < this.breakpoints.sm
                 ? window.innerHeight
                 : 200
         },
 
         /**
-         * TODO
-         * @returns {*|string}
+         * Calculates the text to display as placeholder on the input, providing the user with feedback on the current
+         * selection. For multiselects the text is truncated by using "x options selected".
+         * @returns {string|null}
          */
         displayedPlaceholder() {
-            return this.selectedText || this.placeholder
-        },
-
-        /**
-         * TODO abstracted selected text
-         * @returns {*|string|null|string}
-         */
-        selectedText() {
+            // TODO needs cleaning up a little...
             if (this.multiple && this.selectedValues?.length) {
-                if (this.selectedValues.length === this.options.flatMap(o => (o.group ? o.options : o)).length) {
+                if (this.selectedValues.length === this.options?.flatMap(item => (item.group ? item.options : item)).length) {
                     return 'All options selected'
                 }
 
-                if (this.selectedValues.length > 1) {
+                if (this.selectedValues?.length > 1) {
                     return `${this.selectedValues.length} options selected`
                 }
 
                 const selectedOption = this.options
-                    .flatMap(o => (o.group ? o.options : o))
+                    ?.flatMap(o => (o.group ? o.options : o))
                     .find(option => option.value === this.selectedValues[0])
 
                 return selectedOption ? selectedOption.text : this.placeholder
             }
 
-            if (this.selectedValues.length) {
+            if (this.selectedValues?.length) {
                 const selectedOption = this.options
-                    .flatMap(o => (o.group ? o.options : o))
+                    ?.flatMap(o => (o.group ? o.options : o))
                     .find(option => option.value === this.selectedValues[0])
 
                 return selectedOption ? selectedOption.text : this.placeholder
             }
 
-            return null
+            return this.placeholder || null
         },
 
         /**
-         * TODO
-         * @returns {{inputAria: string, clearSelection: string, listDescription: string}}
+         * Collates aria language strings into one computed object.
+         * @returns {{clearSelection: string, listDescription: string, inputLabel: string, instructions: string}}
          */
         ariaLang() {
             const controls = `Use the arrow keys to navigate, and press Enter or Space to select ${this.multiple ? 'one or more options' : 'an option'}.`
@@ -357,40 +355,29 @@ export default {
         },
 
         /**
-         * TODO
-         * @returns {string}
+         * ASSISTIVE TECH ONLY
+         * Calculates text to announce for assistive tech when selecting or deselecting values. This does not output
+         * visually, it is read out when using screen readers.
+         * @returns { string }
          */
-        selectedOptionsMessage() {
-            if (this.selectedValues.length === 0) {
-                return 'No options selected.'
-            }
-
+        selectedAssistiveText() {
             const selectedText = this.options
-                .filter(option => this.selectedValues.includes(option.value))
+                ?.filter(option => this.selectedValues?.includes(option.value))
                 .map(option => option.text)
                 .join(', ')
 
-            return `Selected options: ${selectedText}`
+            return selectedText ? `Selected options: ${selectedText}` : 'No options selected.'
         }
     },
 
     methods: {
         /**
-         * TODO
-         */
-        cleanupPositioning() {
-            if (this.cleanupAutoUpdate) {
-                this.cleanupAutoUpdate()
-                this.cleanupAutoUpdate = null
-            }
-        },
-
-        /**
-         * TODO
+         * Clears the selected values and emits to the parent. This lets us provide a means to "reset" selected values
+         * to empty if we need to deselect.
          */
         clearSelection() {
-            this.selectedValues = []
             this.$emit('input', this.multiple ? [] : null)
+            this.selectedValues = []
 
             this.closeOptions()
             this.focusInput()
@@ -398,7 +385,8 @@ export default {
 
 
         /**
-         * TODO
+         * Closes the options, resets related states, and cleans up event listeners.
+         * @param { boolean } [focus=false] - Sets if focus should return to the input when closing.
          */
         closeOptions(focus = false) {
             if (!this.isOpen || this.disabled) return
@@ -406,7 +394,6 @@ export default {
 
             if (focus) this.focusInput()
 
-            this.cleanupPositioning()
             this.search = ''
             this.initialMaxHeight = 0
             document.removeEventListener('keydown', this.handleKeyDown)
@@ -414,80 +401,89 @@ export default {
         },
 
         /**
-         * TODO
+         * Triggers focus on the inputContainer's input element.
          */
         focusInput() {
-            this.$refs.inputContainer.querySelector('input').focus()
+            this.$refs.inputContainer?.querySelector('input')?.focus()
         },
 
         /**
-         * TODO
-         * @param event
+         * Handles clicking outside the select component and triggers close.
+         * @param { MouseEvent } event
          */
         handleClickOutside(event) {
             const container = this.$el
-            if (!container.contains(event.target)) {
-                this.closeOptions() // Close if the click is outside
-            }
+            if (!container.contains(event.target)) this.closeOptions()
         },
 
         /**
-         * TODO
-         * @param event
+         * Handles keyboard navigation and controls.
+         * Implements arrow key navigation, enter/space for selection, and tab to exit focus.
+         * @param { KeyboardEvent } event
          */
         handleKeyDown(event) {
             if (!this.isOpen) return
 
-            const flatFilteredOptions = this.filteredOptions.flatMap(option =>
-                option.group ? option.options : option
+            const flatFilteredOptions = this.filteredOptions?.flatMap(
+                option => option.group ? option.options : option
             )
-            const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
+            const options = Array.from(this.$refs.optionsContainer?.querySelectorAll('.select-options-item'))
             const loadMoreButton = this.$refs.loadMoreButton
-            const navigableElements = [...options, loadMoreButton].filter(Boolean) // Include the Load More button
+            const navigableElements = [...options, loadMoreButton].filter(Boolean)
 
             const focusedIndex = navigableElements.indexOf(document.activeElement)
 
             if (event.key === 'ArrowDown') {
-                event.preventDefault() // Prevent page scrolling
-
-                // Focus the next element
-                const nextIndex = focusedIndex === -1 ? 0 : (focusedIndex + 1) % navigableElements.length
+                event.preventDefault() // Stops the element scrolling with arrow keys
+                const nextIndex =
+                    focusedIndex === -1 ?
+                        0 :
+                        (focusedIndex + 1) % navigableElements.length
                 navigableElements[nextIndex]?.focus()
-            } else if (event.key === 'ArrowUp') {
-                event.preventDefault() // Prevent page scrolling
+            }
 
-                // Focus the previous element
-                const prevIndex = focusedIndex === -1 ? navigableElements.length - 1 : (focusedIndex - 1 + navigableElements.length) % navigableElements.length
+            if (event.key === 'ArrowUp') {
+                event.preventDefault() // Stops the element scrolling with arrow keys
+                const prevIndex =
+                    focusedIndex === -1 ?
+                        navigableElements.length - 1 :
+                        (focusedIndex - 1 + navigableElements.length) % navigableElements.length
                 navigableElements[prevIndex]?.focus()
-            } else if (event.key === 'Enter' || (event.key === ' ' && document.activeElement !== this.$refs.inputContainer.querySelector('input'))) {
-                // Handle Enter or Space only when not focused on input
+            }
+            
+            if (
+                event.key === 'Enter' ||
+                (
+                    event.key === ' ' &&
+                    document.activeElement !== this.$refs.inputContainer.querySelector('input')
+                )
+            ) {
                 event.preventDefault()
 
                 if (document.activeElement) {
-                    const isOption = document.activeElement.classList.contains('select-options-item')
+                    const isOption = document.activeElement?.classList.contains('select-options-item')
                     const isLoadMore = document.activeElement === loadMoreButton
 
                     if (isOption) {
-                        // Get the index of the active DOM element
                         const optionIndex = options.indexOf(document.activeElement)
-                        const selectedOption = flatFilteredOptions[optionIndex]
+                        const selectedOption = flatFilteredOptions?.[optionIndex]
 
-                        if (selectedOption) {
-                            this.setSelected(selectedOption)
-                        }
-                    } else if (isLoadMore) {
-                        // Trigger "Load More"
-                        this.requestMoreOptions()
+                        if (selectedOption) this.setSelected(selectedOption)
                     }
+                    
+                    // Trigger load more
+                    if (isLoadMore) this.requestMoreOptions()
                 }
-            } else if (event.key === 'Tab') {
-                // Allow Tab to exit the dropdown
+            }
+            
+            // Trigger close when tabbing away from the options.
+            if (event.key === 'Tab') {
                 this.closeOptions()
             }
         },
 
         /**
-         * TODO
+         * Initialises FloatingUi and adapts positioning automatically.
          */
         initAutoPositioning() {
             const inputContainer = this.$refs.inputContainer
@@ -495,7 +491,7 @@ export default {
 
             if (!inputContainer || !optionsContainer) return
 
-            this.cleanupAutoUpdate = autoUpdate(inputContainer, optionsContainer, () => {
+            autoUpdate(inputContainer, optionsContainer, () => {
                 computePosition(inputContainer, optionsContainer, {
                     placement: 'bottom-start',
                     middleware: [
@@ -524,8 +520,8 @@ export default {
         },
 
         /**
-         * Todo
-         * @param value
+         * Checks if the given option is selected.
+         * @param {string|number} value
          * @returns {boolean}
          */
         isOptionSelected(value) {
@@ -533,37 +529,37 @@ export default {
         },
 
         /**
-         * Todo
-         * @param focus
+         * Opens the options dropdown and runs initial positioning.
+         * @param { boolean } [focus=false] - Focuses on the first enabled option when opening.
          * @returns {Promise<void>}
          */
         async openOptions(focus = false) {
             if (this.isOpen || this.disabled) return
-            this.isOpen = true
 
+            this.isOpen = true
             this.initialMaxHeight = this.viewportMaxHeight
             this.initAutoPositioning()
 
-            // Focus on the first available option when opening via keyboard controls.
             if (focus) {
-                // We need to wait for options to exist in the DOM before focusing, nextTick doesn't work for this so we use requestAnimationFrame.
+                // We need to await the options existing in the DOM before focusing.
                 await new Promise((resolve) => requestAnimationFrame(resolve))
-
                 const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
                 for (const option of options) {
                     if (option.getAttribute('aria-disabled') !== 'true') {
-                        option.focus() // Focus the first enabled option
+                        option.focus()
                         break
                     }
                 }
             }
 
-            document.addEventListener('keydown', this.handleKeyDown) // Add keyboard listener
-            document.addEventListener('mousedown', this.handleClickOutside) // Listen for outside clicks
+            document.addEventListener('keydown', this.handleKeyDown)
+            document.addEventListener('mousedown', this.handleClickOutside)
         },
 
         /**
-         * Todo - when we have more results we need to request them from the parent.
+         * Emits a "load-more-options" event to the parent, this puts responsibility of loading options on the
+         * parent. It sets loadingMore to true to await more options being provided, the watcher then handles
+         * unsetting loadingMore.
          */
         requestMoreOptions() {
             if (this.loadingMore) return
@@ -573,8 +569,9 @@ export default {
         },
 
         /**
-         * todo
-         * @param newValue
+         * Sets the initial selected values that are passed down from the parent via the watcher. Handling both
+         * grouped (multiselect) and ungrouped options.
+         * @param {Array|string|number} newValue - the selected values.
          */
         setInitialSelected(newValue) {
             const values = Array.isArray(newValue) ? newValue : [newValue]
@@ -591,8 +588,9 @@ export default {
         },
 
         /**
-         * Todo
-         * @param option
+         * Manages selection and emits the updated value(s) to the parent. Emits an array of values for multiple select
+         * or single value for single select - similar to Vue's default behaviour.
+         * @param {Object} option - The selected option object.
          */
         setSelected(option) {
             if (option.disabled) return
@@ -613,7 +611,7 @@ export default {
         },
 
         /**
-         * TODO used specifically for when search is disabled, toggles when clicking the input.
+         * Toggle options - this is used specifically for when search is disabled, to provide a way to toggle.
          */
         toggleOptions() {
             if (this.disabled) return
@@ -622,7 +620,7 @@ export default {
         },
 
         /**
-         * Abstracted logic to calculate what element we need to focus when loading more options.
+         * Abstracted logic to calculate what element we need to focus on when loading more options.
          * @returns {*|null}
          */
         calculateFocusTarget() {
@@ -662,7 +660,7 @@ export default {
             if (newValue && !this.isOpen && !this.disabled) this.openOptions()
         },
 
-        // TODO - Track values to update selected values from the parent.
+        // Tracks changes to values passed in from the parent, and updates the selected values.
         value: {
             immediate: true,
             handler(newValue) {
@@ -675,7 +673,6 @@ export default {
      * Clean up event listeners.
      */
     beforeDestroy() {
-        this.cleanupPositioning()
         document.removeEventListener('mousedown', this.handleClickOutside)
     },
 }
@@ -746,7 +743,7 @@ export default {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     color: #000;
     position: relative;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
     z-index: 10;
 }
 
