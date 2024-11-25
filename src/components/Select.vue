@@ -43,7 +43,6 @@
         </div>
 
         <!-- Options list -->
-        <!-- Options list -->
         <div
             v-show="isOpen && !disabled"
             ref="optionsContainer"
@@ -120,6 +119,20 @@
                         </div>
                     </li>
                 </ul>
+
+                <!-- Load more options -->
+                <button
+                    v-if="hasMoreOptions"
+                    ref="loadMoreButton"
+                    class="select-options-load-more"
+                    type="button"
+                    tabindex="0"
+                    :aria-disabled="loadingMore"
+                    :class="{ 'select-options-load-more--disabled': loadingMore }"
+                    @click="requestMoreOptions()"
+                >
+                    {{ loadingMore ? 'Loading...' : 'Load more...' }}
+                </button>
             </template>
 
             <!-- No options feedback -->
@@ -129,20 +142,6 @@
             >
                 No options found.
             </p>
-
-            <!-- Load more options -->
-            <button
-                v-if="hasMoreOptions"
-                ref="loadMoreButton"
-                class="select-options-load-more"
-                type="button"
-                tabindex="0"
-                :aria-disabled="loadingMore"
-                :class="{ 'select-options-load-more--disabled': loadingMore }"
-                @click="requestMoreOptions()"
-            >
-                {{ loadingMore ? 'Loading...' : 'Load more...' }}
-            </button>
         </div>
 
         <!-- Assistive feedback for selected options -->
@@ -773,7 +772,6 @@ export default {
     display: flex;
     gap: 8px;
     justify-content: space-between;
-    padding: 8px 16px;
 }
 
 .select-options-item[aria-disabled="true"],
