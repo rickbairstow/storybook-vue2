@@ -312,8 +312,9 @@ export default {
             const selectedCount = this.selectedValues?.length || 0;
 
             if (this.multiple && selectedCount) {
-                if (selectedCount === allOptions.length) return 'All options selected';
-                if (selectedCount > 1) return `${selectedCount} options selected`;
+                return selectedCount === allOptions.length
+                    ? 'All options selected'
+                    : `${selectedCount} option${selectedCount > 1 ? 's' : ''} selected`;
             }
 
             if (selectedCount) {
