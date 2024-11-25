@@ -308,21 +308,24 @@ export default {
          * @returns {string|null}
          */
         displayedPlaceholder() {
-            const allOptions = this.options?.flatMap(item => (item.group ? item.options : item)) || [];
-            const selectedCount = this.selectedValues?.length || 0;
+            const allOptions = this.options?.flatMap(
+                item => (item.group ? item.options : item)
+            ) || []
+            const selectedCount = this.selectedValues?.length || 0
 
             if (this.multiple && selectedCount) {
+                const pluralisation = selectedCount > 1 ? 's' : ''
                 return selectedCount === allOptions.length
                     ? 'All options selected'
-                    : `${selectedCount} option${selectedCount > 1 ? 's' : ''} selected`;
+                    : `${selectedCount} option${pluralisation} selected`
             }
 
             if (selectedCount) {
-                const selectedOption = allOptions.find(option => option.value === this.selectedValues[0]);
-                return selectedOption?.text || this.placeholder;
+                const selectedOption = allOptions.find(option => option.value === this.selectedValues[0])
+                return selectedOption?.text || this.placeholder
             }
 
-            return this.placeholder || null;
+            return this.placeholder || null
         },
 
         /**
