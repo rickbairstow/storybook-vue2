@@ -308,32 +308,20 @@ export default {
          * @returns {string|null}
          */
         displayedPlaceholder() {
-            // TODO needs cleaning up a little...
-            if (this.multiple && this.selectedValues?.length) {
-                if (this.selectedValues.length === this.options?.flatMap(item => (item.group ? item.options : item)).length) {
-                    return 'All options selected'
-                }
+            const allOptions = this.options?.flatMap(item => (item.group ? item.options : item)) || [];
+            const selectedCount = this.selectedValues?.length || 0;
 
-                if (this.selectedValues?.length > 1) {
-                    return `${this.selectedValues.length} options selected`
-                }
-
-                const selectedOption = this.options
-                    ?.flatMap(o => (o.group ? o.options : o))
-                    .find(option => option.value === this.selectedValues[0])
-
-                return selectedOption ? selectedOption.text : this.placeholder
+            if (this.multiple && selectedCount) {
+                if (selectedCount === allOptions.length) return 'All options selected';
+                if (selectedCount > 1) return `${selectedCount} options selected`;
             }
 
-            if (this.selectedValues?.length) {
-                const selectedOption = this.options
-                    ?.flatMap(o => (o.group ? o.options : o))
-                    .find(option => option.value === this.selectedValues[0])
-
-                return selectedOption ? selectedOption.text : this.placeholder
+            if (selectedCount) {
+                const selectedOption = allOptions.find(option => option.value === this.selectedValues[0]);
+                return selectedOption?.text || this.placeholder;
             }
 
-            return this.placeholder || null
+            return this.placeholder || null;
         },
 
         /**
