@@ -674,8 +674,7 @@ export default {
 }
 </script>
 
-<!-- todo might not need to be scoped -->
-<style scoped>
+<style>
 .select-container {
     font-size: 16px; /* reset */
     position: relative;
