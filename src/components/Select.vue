@@ -139,6 +139,7 @@
             <p
                 v-else
                 aria-live="polite"
+                class="select-options-none"
             >
                 No options found.
             </p>
@@ -765,6 +766,12 @@ export default {
     padding: 8px 16px;
     background-color: #f9f9f9;
     border-bottom: 1px solid #ddd;
+}
+
+.select-options-item,
+.select-options-none {
+    margin: 0;
+    padding: 8px 16px;
 }
 
 .select-options-item {
