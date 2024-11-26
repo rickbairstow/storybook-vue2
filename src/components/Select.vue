@@ -127,11 +127,11 @@
                     class="select-options-load-more"
                     type="button"
                     tabindex="0"
-                    :aria-disabled="loadingMore"
-                    :class="{ 'select-options-load-more--disabled': loadingMore }"
+                    :aria-disabled="loading"
+                    :class="{ 'select-options-load-more--disabled': loading }"
                     @click="requestMoreOptions()"
                 >
-                    {{ loadingMore ? 'Loading...' : 'Load more options' }}
+                    {{ loading ? 'Loading...' : 'Load more options' }}
                 </button>
             </template>
 
@@ -184,15 +184,19 @@ export default {
         },
         hasMoreOptions: {
             default: false,
-            type: Boolean,
+            type: Boolean
+        },
+        loading: {
+            default: false,
+            type: Boolean
         },
         multiple: {
-            type: Boolean,
             default: false,
+            type: Boolean
         },
         options: {
-            type: Array,
             default: () => [],
+            type: Array,
             validator: (value) => {
                 // Custom validator to check that the data structure contains text and value keys, for both single and grouped options.
                 if (!value) return false
@@ -245,7 +249,6 @@ export default {
             floatingStyles: {},
             initialMaxHeight: 0,
             isOpen: false,
-            loadingMore: false,
             search: '',
             selectedValue: []
         }
@@ -446,7 +449,7 @@ export default {
                         (focusedIndex - 1 + navigableElements.length) % navigableElements.length
                 navigableElements[prevIndex]?.focus()
             }
-            
+
             if (
                 event.key === 'Enter' ||
                 (
@@ -466,12 +469,12 @@ export default {
 
                         if (selectedOption) this.setSelected(selectedOption)
                     }
-                    
+
                     // Trigger load more
                     if (isLoadMore) this.requestMoreOptions()
                 }
             }
-            
+
             // Trigger close when tabbing away from the options.
             if (event.key === 'Tab') {
                 this.closeOptions()
@@ -529,7 +532,7 @@ export default {
          * @param { boolean } [focus=false] - Focuses on the first enabled option when opening.
          * @returns {Promise<void>}
          */
-        async openOptions(focus = false) {
+        openOptions(focus = false) {
             if (this.isOpen || this.disabled) return
 
             this.isOpen = true
@@ -537,15 +540,18 @@ export default {
             this.initAutoPositioning()
 
             if (focus) {
-                // We need to await the options existing in the DOM before focusing.
-                await new Promise((resolve) => requestAnimationFrame(resolve))
-                const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
-                for (const option of options) {
-                    if (option.getAttribute('aria-disabled') !== 'true') {
-                        option.focus()
-                        break
+                new Promise((resolve) => {
+                    requestAnimationFrame(resolve)
+                }).then(() => {
+                    const options = Array.from(this.$refs.optionsContainer.querySelectorAll('.select-options-item'))
+                    for (let i = 0; i < options.length; i++) {
+                        const option = options[i]
+                        if (option.getAttribute('aria-disabled') !== 'true') {
+                            option.focus()
+                            break
+                        }
                     }
-                }
+                })
             }
 
             document.addEventListener('keydown', this.handleKeyDown)
@@ -554,13 +560,9 @@ export default {
 
         /**
          * Emits a "load-more-options" event to the parent, this puts responsibility of loading options on the
-         * parent. It sets loadingMore to true to await more options being provided, the watcher then handles
-         * unsetting loadingMore.
+         * parent, including the provision of loading state.
          */
         requestMoreOptions() {
-            if (this.loadingMore) return
-
-            this.loadingMore = true
             this.$emit('load-more-options')
         },
 
@@ -638,15 +640,12 @@ export default {
         options: {
             immediate: true,
             handler(updatedOptions) {
-                if (this.loadingMore) {
+                if (this.currentOptionsLength !== updatedOptions?.length) {
                     const focusTarget = this.calculateFocusTarget()
                     if (focusTarget) focusTarget?.focus()
 
-                    this.currentOptionsLength = updatedOptions.length
-                    this.loadingMore = false
-                } else {
-                    this.currentOptionsLength = updatedOptions.length
                 }
+                this.currentOptionsLength = updatedOptions.length
             }
         },
 
@@ -759,6 +758,10 @@ export default {
     border-bottom: 1px solid #ddd;
 }
 
+.select-options-container .select-options-group-header:not(:first-of-type) {
+    border-top: 1px solid #ccc;
+}
+
 .select-options-item,
 .select-options-none {
     margin: 0;
@@ -781,10 +784,10 @@ export default {
     pointer-events: none;
 }
 
-.select-options-load-more:hover,
-.select-options-load-more:focus,
 .select-options-item:hover,
-.select-options-item:focus {
+.select-options-item:focus,
+.select-options-load-more:hover,
+.select-options-load-more:focus {
     background-color: #ccc;
 }
 
@@ -794,6 +797,7 @@ export default {
 
 .select-options-item[aria-selected="true"] .select-options-item--check {
     display: block;
+    flex: none;
 }
 
 .select-options-load-more {

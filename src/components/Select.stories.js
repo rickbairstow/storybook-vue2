@@ -51,16 +51,22 @@ export default {
                 type: 'boolean'
             }
         },
-        options: {
-            description: `An object containing options, this must be of the format [{ text: 'string', value: 'string', disabled: 'boolean' (optional) }]`,
+        loading: {
+            description: 'Sets if the component\'s load more should show a loading state.',
             control: {
-                type: 'object'
+                type: 'boolean'
             }
         },
         multiple: {
             description: 'A boolean to set the component to allow multiple selections, similar to a native HTML select.',
             control: {
                 type: 'boolean'
+            }
+        },
+        options: {
+            description: `An object containing options, this must be of the format [{ text: 'string', value: 'string', disabled: 'boolean' (optional) }]`,
+            control: {
+                type: 'object'
             }
         },
         placeholder: {
@@ -99,6 +105,7 @@ export default {
         disabled: false,
         id: 'single-select',
         hasMoreOptions: false,
+        loading: false,
         multiple: false,
         placeholder: 'Select an option',
         options: flatOptions,
@@ -120,6 +127,7 @@ const Template = (args, { argTypes }) => ({
         return {
             localValue: args.value, // Local v-model binding
             localOptions: args.options, // Local options for load more
+            localLoading: args.loading // Local loading state
         };
     },
 
@@ -135,6 +143,8 @@ const Template = (args, { argTypes }) => ({
         },
 
         async addMoreOptions() {
+            this.localLoading = true
+
             // Simulate a delay when loading more options
             await new Promise(resolve => setTimeout(resolve, moreOptionsDelay))
 
@@ -158,6 +168,8 @@ const Template = (args, { argTypes }) => ({
                     })
                 }
             }
+
+            this.localLoading = false
         }
     },
 
@@ -168,6 +180,7 @@ const Template = (args, { argTypes }) => ({
                 :disabled="$props.disabled"
                 :id="$props.id"
                 :has-more-options="$props.hasMoreOptions"
+                :loading="localLoading"
                 :multiple="$props.multiple"
                 :placeholder="$props.placeholder"
                 :searchable="$props.searchable"
