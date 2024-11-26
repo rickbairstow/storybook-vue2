@@ -32,7 +32,7 @@
             />
 
             <button
-                v-if="clearable && this.selectedValues.length && !disabled"
+                v-if="clearable && this.selectedValue.length && !disabled"
                 class="select-input-clear"
                 type="button"
                 :aria-label="ariaLang.clearSelection"
@@ -247,7 +247,7 @@ export default {
             isOpen: false,
             loadingMore: false,
             search: '',
-            selectedValues: []
+            selectedValue: []
         }
     },
 
@@ -311,7 +311,7 @@ export default {
             const allOptions = this.options?.flatMap(
                 item => (item.group ? item.options : item)
             ) || []
-            const selectedCount = this.selectedValues?.length || 0
+            const selectedCount = this.selectedValue?.length || 0
 
             if (this.multiple && selectedCount) {
                 const pluralisation = selectedCount > 1 ? 's' : ''
@@ -321,7 +321,7 @@ export default {
             }
 
             if (selectedCount) {
-                const selectedOption = allOptions.find(option => option.value === this.selectedValues[0])
+                const selectedOption = allOptions.find(option => option.value === this.selectedValue[0])
                 return selectedOption?.text || this.placeholder
             }
 
@@ -358,7 +358,7 @@ export default {
          */
         selectedAssistiveText() {
             const selectedText = this.options
-                ?.filter(option => this.selectedValues?.includes(option.value))
+                ?.filter(option => this.selectedValue?.includes(option.value))
                 .map(option => option.text)
                 .join(', ')
 
@@ -373,7 +373,7 @@ export default {
          */
         clearSelection() {
             this.$emit('input', this.multiple ? [] : null)
-            this.selectedValues = []
+            this.selectedValue = []
 
             this.closeOptions()
             this.focusInput()
@@ -521,7 +521,7 @@ export default {
          * @returns {boolean}
          */
         isOptionSelected(value) {
-            return !!this.selectedValues?.includes(value)
+            return !!this.selectedValue?.includes(value)
         },
 
         /**
@@ -570,17 +570,19 @@ export default {
          * @param {Array|string|number} newValue - the selected values.
          */
         setInitialSelected(newValue) {
-            const values = Array.isArray(newValue) ? newValue : [newValue]
+            const values = Array.isArray(newValue) ? newValue : [newValue];
 
-            const flattenedOptions = this.options.flatMap(option =>
-                option.group ? option.options : option
+            const flattenedOptions = this.options?.flatMap(
+                option => option.group ? option.options : option
             )
 
-            // TODO simplify this.
-            this.selectedValues = [...new Set(flattenedOptions
-                .filter(option => values.includes(option.value) && !option.disabled)
+            this.selectedValue = flattenedOptions
+                ?.filter(option => values.includes(option.value))
                 .map(option => option.value)
-            )]
+                .reduce((unique, value) => {
+                    if (!unique.includes(value)) unique.push(value);
+                    return unique;
+                }, [])
         },
 
         /**
@@ -594,16 +596,16 @@ export default {
             const newValue = option.value
 
             if (this.multiple) {
-                this.selectedValues =
-                    this.selectedValues.includes(newValue) ?
-                        this.selectedValues.filter(val => val !== newValue) :
-                        this.selectedValues = [...this.selectedValues, newValue]
+                this.selectedValue =
+                    this.selectedValue.includes(newValue) ?
+                        this.selectedValue.filter(val => val !== newValue) :
+                        this.selectedValue = [...this.selectedValue, newValue]
             } else {
-                this.selectedValues = [newValue]
+                this.selectedValue = [newValue]
                 this.closeOptions(true)
             }
 
-            this.$emit('input', this.multiple ? this.selectedValues : newValue)
+            this.$emit('input', this.multiple ? this.selectedValue : newValue)
         },
 
         /**
