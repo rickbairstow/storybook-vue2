@@ -131,7 +131,7 @@
                     :class="{ 'select-options-load-more--disabled': loadingMore }"
                     @click="requestMoreOptions()"
                 >
-                    {{ loadingMore ? 'Loading...' : 'Load more...' }}
+                    {{ loadingMore ? 'Loading...' : 'Load more options' }}
                 </button>
             </template>
 
