@@ -658,7 +658,9 @@ export default {
             if (newValue && !this.isOpen && !this.disabled) this.openOptions()
         },
 
-        // Tracks changes to values passed in from the parent, and updates the selected values.
+        /**
+         * Tracks changes to values passed in from the parent, and updates the selected values.
+         */
         value: {
             immediate: true,
             handler(newValue) {
@@ -707,7 +709,7 @@ export default {
     display: block;
     height: 100%;
     min-width: 0;
-    padding: 0 .5rem;
+    padding: 0 12px;
     width: 100%;
 }
 
